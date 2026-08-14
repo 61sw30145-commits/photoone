@@ -3,8 +3,7 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#111111">
@@ -48,9 +47,14 @@
 
     .hidden { display: none !important; }
 
-    h1 { font-size: clamp(28px, 6vw, 44px); margin: 12px 0; }
+    h1 {
+      font-size: clamp(28px, 6vw, 44px);
+      margin: 12px 0;
+      text-align: center;
+    }
+
     h2 { margin: 10px 0 18px; }
-    p { color: var(--muted); font-size: 18px; }
+    p { color: var(--muted); font-size: 18px; text-align: center; }
 
     button {
       border: 0;
@@ -64,7 +68,7 @@
       touch-action: manipulation;
     }
 
-    button:disabled { opacity: .45; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
 
     .primary { background: var(--primary); color: white; }
     .blue { background: var(--blue); color: white; }
@@ -105,17 +109,14 @@
       font-weight: 700;
     }
 
-    .photo-grid {
-      width: min(94vw, 700px);
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .photo-grid img {
-      width: 100%;
-      border-radius: 14px;
-      background: #fff;
+    .selected-frame-preview {
+      width: min(60vw, 240px);
+      aspect-ratio: 1 / 3;
+      object-fit: contain;
+      background: white;
+      border-radius: 16px;
+      margin: 4px auto 14px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.35);
     }
 
     .frame-grid {
@@ -131,7 +132,10 @@
       border-radius: 18px;
       padding: 8px;
       cursor: pointer;
+      transition: .15s ease;
     }
+
+    .frame-card:active { transform: scale(.98); }
 
     .frame-card.selected {
       border-color: var(--primary);
@@ -153,6 +157,22 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      text-align: center;
+    }
+
+    .photo-grid {
+      width: min(94vw, 700px);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .photo-grid img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      border-radius: 14px;
+      background: #fff;
     }
 
     #finalCanvas {
@@ -169,6 +189,7 @@
       border-radius: 20px;
       background: white;
       color: #111;
+      text-align: center;
     }
 
     #qr {
@@ -209,6 +230,17 @@
       margin-top: 18px;
       color: #aaa;
       font-size: 14px;
+      text-align: center;
+    }
+
+    .selection-info {
+      width: min(92vw, 700px);
+      padding: 14px;
+      background: #191919;
+      border: 1px solid #333;
+      border-radius: 16px;
+      margin-bottom: 14px;
+      text-align: center;
     }
 
     @media (min-width: 700px) {
@@ -223,12 +255,27 @@
   <section id="home" class="screen">
     <div class="logo">📸</div>
     <h1>J PHOTO BOOTH</h1>
-    <p>ถ่ายรูป • เลือกกรอบ • พิมพ์ • รับรูปด้วย QR</p>
-    <button class="primary" onclick="startCamera()">เริ่มถ่ายรูป</button>
+    <p>เลือกกรอบ → ถ่าย 3 รูป → พิมพ์ → รับรูปด้วย QR</p>
+    <button class="primary" onclick="openFrameSelector()">เลือกกรอบรูป</button>
 
     <div class="admin-tip">
       เพิ่มกรอบใหม่ได้จาก Google Drive โดยอัปโหลดไฟล์ PNG/JPG
-      เข้าโฟลเดอร์ FRAMES แล้วรีเฟรชแอป ไม่ต้องแก้โค้ด
+      เข้าโฟลเดอร์ FRAMES แล้วกลับมาเลือกกรอบใหม่
+    </div>
+  </section>
+
+  <!-- FRAME SELECTOR -->
+  <section id="frameScreen" class="screen hidden">
+    <h1>🖼️ เลือกกรอบรูป</h1>
+    <p id="frameStatus">กำลังโหลดกรอบจาก Google Drive...</p>
+
+    <div id="frameList" class="frame-grid"></div>
+
+    <div>
+      <button class="dark" onclick="showScreen('home')">ย้อนกลับ</button>
+      <button id="useFrameBtn" class="primary" onclick="startWithSelectedFrame()" disabled>
+        เลือกกรอบนี้ แล้วถ่ายรูป
+      </button>
     </div>
   </section>
 
@@ -236,38 +283,29 @@
   <section id="cameraScreen" class="screen hidden">
     <h1>📸 เตรียมตัว</h1>
 
+    <div id="selectedFrameDuringCamera" class="selection-info">
+      <div>กรอบที่เลือก</div>
+      <img id="cameraFramePreview" class="selected-frame-preview" alt="กรอบที่เลือก">
+    </div>
+
     <div class="camera-wrap">
       <video id="camera" autoplay playsinline muted></video>
     </div>
 
     <div id="countdown"></div>
-    <div id="photoCounter" class="counter">รูปที่ 1 / 4</div>
+    <div id="photoCounter" class="counter">รูปที่ 1 / 3</div>
   </section>
 
   <!-- REVIEW -->
   <section id="reviewScreen" class="screen hidden">
     <h1>ตรวจสอบรูป</h1>
+    <p>ถ่ายครบ 3 รูปแล้ว</p>
 
     <div id="photoList" class="photo-grid"></div>
 
     <div>
-      <button class="danger" onclick="restart()">ถ่ายใหม่</button>
-      <button class="primary" onclick="openFrameSelector()">เลือกกรอบ</button>
-    </div>
-  </section>
-
-  <!-- FRAME SELECTOR -->
-  <section id="frameScreen" class="screen hidden">
-    <h1>เลือกกรอบรูป</h1>
-    <p id="frameStatus">กำลังโหลดกรอบ...</p>
-
-    <div id="frameList" class="frame-grid"></div>
-
-    <div>
-      <button class="dark" onclick="showScreen('reviewScreen')">ย้อนกลับ</button>
-      <button id="useFrameBtn" class="primary" onclick="createFinalPhoto()" disabled>
-        ใช้กรอบนี้
-      </button>
+      <button class="danger" onclick="restartToFrameSelector()">ถ่ายใหม่</button>
+      <button class="primary" onclick="createFinalPhoto()">ใช้รูปนี้</button>
     </div>
   </section>
 
@@ -295,7 +333,12 @@
   </section>
 
 <script>
-  const PHOTO_COUNT = 4;
+  // จำนวนรูปที่ถ่ายต่อ 1 รายการ
+  const PHOTO_COUNT = 3;
+
+  // 2 x 6 inches at 300 DPI
+  const OUTPUT_WIDTH = 600;
+  const OUTPUT_HEIGHT = 1800;
 
   let video = null;
   let stream = null;
@@ -306,20 +349,106 @@
   let selectedFrameIndex = 0;
   let finalImage = null;
 
-  // 2 x 6 inches at 300 DPI
-  const OUTPUT_WIDTH = 600;
-  const OUTPUT_HEIGHT = 1800;
-
   function showScreen(id) {
     document.querySelectorAll(".screen").forEach(el => el.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
     window.scrollTo(0, 0);
   }
 
+  // -----------------------------
+  // FRAME SELECTOR
+  // -----------------------------
+
+  async function openFrameSelector() {
+    showScreen("frameScreen");
+
+    const list = document.getElementById("frameList");
+    const status = document.getElementById("frameStatus");
+    const btn = document.getElementById("useFrameBtn");
+
+    list.innerHTML = "";
+    btn.disabled = true;
+    status.textContent = "กำลังโหลดกรอบจาก Google Drive...";
+
+    try {
+      frames = await runServer("getFrames");
+
+      if (!Array.isArray(frames) || frames.length === 0) {
+        status.textContent =
+          "ยังไม่มีกรอบในโฟลเดอร์ FRAMES กรุณาอัปโหลด PNG/JPG แล้วลองใหม่";
+        return;
+      }
+
+      status.textContent = `มีกรอบ ${frames.length} แบบ`;
+
+      if (selectedFrameIndex >= frames.length) {
+        selectedFrameIndex = 0;
+      }
+
+      frames.forEach((frame, index) => {
+        const card = document.createElement("div");
+        card.className =
+          "frame-card" + (index === selectedFrameIndex ? " selected" : "");
+
+        const img = document.createElement("img");
+        img.src = frame.dataUrl;
+        img.alt = frame.name || `กรอบ ${index + 1}`;
+
+        const name = document.createElement("div");
+        name.className = "frame-name";
+        name.textContent = frame.name || `กรอบ ${index + 1}`;
+
+        card.appendChild(img);
+        card.appendChild(name);
+
+        card.onclick = () => {
+          selectedFrameIndex = index;
+
+          document.querySelectorAll(".frame-card").forEach(c => {
+            c.classList.remove("selected");
+          });
+
+          card.classList.add("selected");
+          btn.disabled = false;
+        };
+
+        list.appendChild(card);
+      });
+
+      btn.disabled = false;
+
+    } catch (error) {
+      console.error(error);
+      status.textContent = "โหลดกรอบไม่สำเร็จ: " + getErrorMessage(error);
+    }
+  }
+
+  function startWithSelectedFrame() {
+    if (!frames.length || !frames[selectedFrameIndex]) {
+      alert("กรุณาเลือกกรอบก่อน");
+      return;
+    }
+
+    const frame = frames[selectedFrameIndex];
+    const preview = document.getElementById("cameraFramePreview");
+
+    preview.src = frame.dataUrl || "";
+
+    startCamera();
+  }
+
+  // -----------------------------
+  // CAMERA
+  // -----------------------------
+
   async function startCamera() {
     showScreen("cameraScreen");
 
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("อุปกรณ์หรือเบราว์เซอร์นี้ไม่รองรับการเปิดกล้อง");
+      }
+
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "user",
@@ -331,16 +460,19 @@
 
       video = document.getElementById("camera");
       video.srcObject = stream;
+
       await video.play();
 
       photos = [];
       currentPhoto = 0;
+      finalImage = null;
 
       setTimeout(takePhoto, 800);
 
     } catch (error) {
-      alert("เปิดกล้องไม่ได้\n\n" + error.message);
-      showScreen("home");
+      console.error(error);
+      alert("เปิดกล้องไม่ได้\n\n" + getErrorMessage(error));
+      showScreen("frameScreen");
     }
   }
 
@@ -348,6 +480,7 @@
     return new Promise(resolve => {
       let n = seconds;
       const el = document.getElementById("countdown");
+
       el.textContent = n;
 
       const timer = setInterval(() => {
@@ -372,13 +505,20 @@
 
     await countdown(3);
 
+    if (!video || !video.videoWidth) {
+      alert("กล้องยังไม่พร้อม กรุณาลองใหม่");
+      restartToFrameSelector();
+      return;
+    }
+
     const canvas = document.createElement("canvas");
+
     canvas.width = video.videoWidth || 1280;
     canvas.height = video.videoHeight || 1920;
 
     const ctx = canvas.getContext("2d");
 
-    // Mirror the saved image so it matches the preview.
+    // Mirror saved image to match camera preview.
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -398,7 +538,15 @@
       stream.getTracks().forEach(track => track.stop());
       stream = null;
     }
+
+    if (video) {
+      video.srcObject = null;
+    }
   }
+
+  // -----------------------------
+  // REVIEW
+  // -----------------------------
 
   function showReview() {
     showScreen("reviewScreen");
@@ -414,68 +562,28 @@
     });
   }
 
-  async function openFrameSelector() {
-    showScreen("frameScreen");
+  function restartToFrameSelector() {
+    stopCamera();
 
-    const list = document.getElementById("frameList");
-    const status = document.getElementById("frameStatus");
-    const btn = document.getElementById("useFrameBtn");
+    photos = [];
+    currentPhoto = 0;
+    finalImage = null;
 
-    list.innerHTML = "";
-    btn.disabled = true;
-
-    status.textContent = "กำลังโหลดกรอบจาก Google Drive...";
-
-    try {
-      frames = await runServer("getFrames");
-
-      if (!frames.length) {
-        status.textContent =
-          "ยังไม่มีกรอบในโฟลเดอร์ FRAMES — ให้อัปโหลด PNG/JPG แล้วเปิดหน้านี้ใหม่";
-        return;
-      }
-
-      status.textContent = `มีกรอบ ${frames.length} แบบ`;
-
-      if (selectedFrameIndex >= frames.length) {
-        selectedFrameIndex = 0;
-      }
-
-      frames.forEach((frame, index) => {
-        const card = document.createElement("div");
-        card.className = "frame-card" + (index === selectedFrameIndex ? " selected" : "");
-
-        const img = document.createElement("img");
-        img.src = frame.dataUrl;
-        img.alt = frame.name;
-
-        const name = document.createElement("div");
-        name.className = "frame-name";
-        name.textContent = frame.name;
-
-        card.appendChild(img);
-        card.appendChild(name);
-
-        card.onclick = () => {
-          selectedFrameIndex = index;
-          document.querySelectorAll(".frame-card").forEach(c => c.classList.remove("selected"));
-          card.classList.add("selected");
-          btn.disabled = false;
-        };
-
-        list.appendChild(card);
-      });
-
-      btn.disabled = false;
-
-    } catch (error) {
-      status.textContent = "โหลดกรอบไม่สำเร็จ: " + error.message;
-    }
+    openFrameSelector();
   }
 
-  function createFinalPhoto() {
-    if (!frames.length) {
-      alert("ยังไม่มีกรอบ");
+  // -----------------------------
+  // CREATE FINAL PHOTO
+  // -----------------------------
+
+  async function createFinalPhoto() {
+    if (photos.length !== PHOTO_COUNT) {
+      alert(`ต้องมีรูปครบ ${PHOTO_COUNT} รูปก่อน`);
+      return;
+    }
+
+    if (!frames.length || !frames[selectedFrameIndex]) {
+      alert("ไม่พบกรอบที่เลือก");
       return;
     }
 
@@ -485,71 +593,92 @@
 
     const ctx = canvas.getContext("2d");
 
-    // White background first.
+    // White background.
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw four photos vertically.
+    // Three vertical photo areas.
     const marginX = 42;
     const top = 45;
     const gap = 18;
     const bottomArea = 150;
 
     const photoW = canvas.width - marginX * 2;
+
     const availableH =
-      canvas.height - top - bottomArea - gap * (PHOTO_COUNT - 1);
+      canvas.height -
+      top -
+      bottomArea -
+      gap * (PHOTO_COUNT - 1);
 
     const photoH = Math.floor(availableH / PHOTO_COUNT);
 
-    const imagePromises = photos.map(src => loadImage(src));
+    try {
+      const images = await Promise.all(photos.map(src => loadImage(src)));
 
-    Promise.all(imagePromises).then(images => {
       images.forEach((img, i) => {
         const y = top + i * (photoH + gap);
         drawCover(ctx, img, marginX, y, photoW, photoH);
       });
 
-      // Load the selected overlay frame.
-      const frame = new Image();
-      frame.onload = () => {
-        // Frame is an overlay. Design your PNG with transparent photo windows.
-        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+      // Overlay selected frame.
+      const frame = await loadImage(frames[selectedFrameIndex].dataUrl);
 
-        finalImage = canvas.toDataURL("image/jpeg", 0.95);
-        showScreen("finalScreen");
-      };
+      ctx.drawImage(
+        frame,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
 
-      frame.onerror = () => {
-        alert("ไฟล์กรอบนี้โหลดไม่ได้");
-      };
+      finalImage = canvas.toDataURL("image/jpeg", 0.95);
 
-      frame.src = frames[selectedFrameIndex].dataUrl;
-    });
+      showScreen("finalScreen");
+
+    } catch (error) {
+      console.error(error);
+      alert("สร้างรูปสุดท้ายไม่สำเร็จ\n\n" + getErrorMessage(error));
+    }
   }
 
   function loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
+
       img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onerror = () => reject(new Error("โหลดรูปไม่สำเร็จ"));
+
       img.src = src;
     });
   }
 
   function drawCover(ctx, img, x, y, w, h) {
-    const scale = Math.max(w / img.width, h / img.height);
+    const scale = Math.max(
+      w / img.width,
+      h / img.height
+    );
+
     const dw = img.width * scale;
     const dh = img.height * scale;
+
     const dx = x + (w - dw) / 2;
     const dy = y + (h - dh) / 2;
 
     ctx.save();
+
     ctx.beginPath();
     ctx.rect(x, y, w, h);
     ctx.clip();
+
     ctx.drawImage(img, dx, dy, dw, dh);
+
     ctx.restore();
   }
+
+  // -----------------------------
+  // PRINT
+  // -----------------------------
 
   function printPhoto() {
     if (!finalImage) {
@@ -557,7 +686,6 @@
       return;
     }
 
-    // iPad/Safari will show the AirPrint print sheet.
     const win = window.open("", "_blank");
 
     if (!win) {
@@ -566,14 +694,20 @@
     }
 
     win.document.open();
+
     win.document.write(`
       <!doctype html>
       <html>
       <head>
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <title>J PHOTO BOOTH</title>
+
         <style>
-          @page { size: 2in 6in; margin: 0; }
+          @page {
+            size: 2in 6in;
+            margin: 0;
+          }
+
           html, body {
             margin: 0;
             padding: 0;
@@ -581,6 +715,7 @@
             height: 6in;
             background: white;
           }
+
           img {
             display: block;
             width: 2in;
@@ -588,18 +723,27 @@
           }
         </style>
       </head>
+
       <body>
         <img src="${finalImage}">
+
         <script>
           window.onload = function() {
-            setTimeout(function() { window.print(); }, 400);
+            setTimeout(function() {
+              window.print();
+            }, 400);
           };
         <\/script>
       </body>
       </html>
     `);
+
     win.document.close();
   }
+
+  // -----------------------------
+  // SAVE + QR
+  // -----------------------------
 
   async function saveAndQR() {
     if (!finalImage) {
@@ -608,6 +752,7 @@
     }
 
     const status = document.getElementById("status");
+
     status.textContent = "กำลังบันทึกรูปลง Google Drive...";
 
     const fileName =
@@ -616,33 +761,78 @@
       ".jpg";
 
     try {
-      const result = await runServer("uploadPhoto", finalImage, fileName);
+      const result =
+        await runServer("uploadPhoto", finalImage, fileName);
+
+      if (!result || !result.downloadUrl) {
+        throw new Error("Google Apps Script ไม่ได้ส่งลิงก์ดาวน์โหลดกลับมา");
+      }
 
       const qrUrl =
         "https://quickchart.io/qr?size=400&text=" +
         encodeURIComponent(result.downloadUrl);
 
       document.getElementById("qr").src = qrUrl;
-      document.getElementById("downloadLink").href = result.downloadUrl;
+      document.getElementById("downloadLink").href =
+        result.downloadUrl;
 
       document.getElementById("qrArea").classList.remove("hidden");
 
-      status.textContent = "✅ พร้อมให้ลูกค้าสแกน QR แล้ว";
+      status.textContent =
+        "✅ พร้อมให้ลูกค้าสแกน QR แล้ว";
 
     } catch (error) {
-      status.textContent = "❌ บันทึกรูปไม่สำเร็จ: " + error.message;
+      console.error(error);
+
+      status.textContent =
+        "❌ บันทึกรูปไม่สำเร็จ: " +
+        getErrorMessage(error);
     }
   }
 
+  // -----------------------------
+  // GOOGLE APPS SCRIPT
+  // -----------------------------
+
   function runServer(functionName, ...args) {
     return new Promise((resolve, reject) => {
-      const runner = google.script.run
-        .withSuccessHandler(resolve)
-        .withFailureHandler(reject);
+      if (
+        typeof google === "undefined" ||
+        !google.script ||
+        !google.script.run
+      ) {
+        reject(
+          new Error(
+            "ไม่พบ Google Apps Script กรุณาเปิดเว็บจาก URL ของ Web App"
+          )
+        );
+        return;
+      }
+
+      const runner =
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject);
 
       runner[functionName](...args);
     });
   }
+
+  function getErrorMessage(error) {
+    if (!error) return "ไม่ทราบสาเหตุ";
+
+    if (typeof error === "string") {
+      return error;
+    }
+
+    return error.message ||
+      error.toString() ||
+      "ไม่ทราบสาเหตุ";
+  }
+
+  // -----------------------------
+  // RESTART
+  // -----------------------------
 
   function restart() {
     stopCamera();
@@ -653,14 +843,22 @@
     selectedFrameIndex = 0;
     finalImage = null;
 
-    document.getElementById("qrArea").classList.add("hidden");
-    document.getElementById("status").textContent = "";
+    document.getElementById("qrArea")
+      .classList.add("hidden");
+
+    document.getElementById("status")
+      .textContent = "";
+
+    document.getElementById("photoList")
+      .innerHTML = "";
 
     showScreen("home");
   }
 
-  // Prevent accidental page zoom on repeated touch gestures.
-  document.addEventListener("gesturestart", e => e.preventDefault());
+  document.addEventListener(
+    "gesturestart",
+    e => e.preventDefault()
+  );
 </script>
 
 </body>
