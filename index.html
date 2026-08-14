@@ -2,7 +2,11 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
 
 <title>J PHOTO BOOTH</title>
 
@@ -16,9 +20,15 @@ html,
 body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    min-height: 100%;
     background: #111;
     color: white;
-    font-family: Arial, "Noto Sans Thai", sans-serif;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
 }
 
 body {
@@ -26,15 +36,1798 @@ body {
 }
 
 button {
-    border: none;
+    border: 0;
+    border-radius: 18px;
+    padding: 16px 25px;
+    font-size: 19px;
+    font-weight: 800;
     cursor: pointer;
-    font-family: inherit;
 }
+
+button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* =========================
+   SCREEN
+========================= */
 
 .screen {
     min-height: 100vh;
-    padding: 25px 15px 50px;
+    padding: 25px 15px 45px;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+h1 {
+    margin: 5px 0 12px;
+    font-size: clamp(30px, 6vw, 55px);
+    text-align: center;
+}
+
+.subtitle {
+    color: #aaa;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background: #0b7d3c;
+    color: white;
+}
+
+.btn-secondary {
+    background: #333;
+    color: white;
+}
+
+.btn-blue {
+    background: #1769aa;
+    color: white;
+}
+
+.btn-pink {
+    background: #e83e8c;
+    color: white;
+}
+
+.btn-drive {
+    background: #4285f4;
+    color: white;
+}
+
+/* =========================
+   FRAME SELECTOR
+========================= */
+
+#frameList {
+    width: min(1200px, 100%);
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+}
+
+.frame-card {
+    background: #222;
+    border-radius: 20px;
+    padding: 12px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.frame-card:hover {
+    transform: translateY(-3px);
+}
+
+.frame-card.selected {
+    border-color: #00d95f;
+    box-shadow: 0 0 0 3px rgba(0,217,95,.15);
+}
+
+.frame-image {
+    width: 100%;
+    aspect-ratio: 1 / 3;
+    object-fit: contain;
+    display: block;
+    background: #181818;
+    border-radius: 12px;
+}
+
+.frame-name {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+/* =========================
+   CAMERA
+========================= */
+
+.camera-wrap {
+    width: min(850px, 95vw);
+}
+
+.camera-box {
+    position: relative;
+    width: 100%;
+    background: black;
+    border-radius: 22px;
+    overflow: hidden;
+}
+
+video {
+    width: 100%;
+    display: block;
+    transform: scaleX(-1);
+}
+
+.countdown {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(90px, 25vw, 180px);
+    font-weight: 900;
+    text-shadow: 0 4px 30px #000;
+    pointer-events: none;
+}
+
+/* =========================
+   PHOTO RESULT
+========================= */
+
+.result-wrap {
+    width: min(600px, 92vw);
+}
+
+#finalCanvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: white;
+    border-radius: 15px;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.status {
+    min-height: 30px;
+    margin: 15px;
+    color: #ddd;
+    text-align: center;
+}
+
+.success {
+    color: #00e676;
+}
+
+.error {
+    color: #ff6b6b;
+}
+
+/* =========================
+   PHOTO STRIP
+========================= */
+
+.photo-preview {
+    width: min(900px, 95vw);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.photo-preview img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #222;
+}
+
+/* =========================
+   PRINT
+========================= */
+
+@media print {
+
+    body {
+        background: white;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    #printArea,
+    #printArea * {
+        visibility: visible !important;
+    }
+
+    #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    #finalCanvas {
+        width: 100%;
+        max-width: 600px;
+        border-radius: 0;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     HOME
+===================================================== -->
+
+<section id="homeScreen" class="screen">
+
+    <h1>📸 J PHOTO BOOTH</h1>
+
+    <div class="subtitle">
+        ถ่ายรูปแบบ Photo Booth
+    </div>
+
+    <div class="buttons">
+
+        <button
+            class="btn-primary"
+            onclick="openFrameSelector()">
+
+            🖼️ เลือกกรอบรูป
+
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     FRAME SELECTOR
+===================================================== -->
+
+<section id="frameScreen"
+         class="screen hidden">
+
+    <h1>🖼️ เลือกกรอบรูป</h1>
+
+    <div class="subtitle"
+         id="frameStatus">
+
+        กำลังโหลดกรอบ...
+
+    </div>
+
+    <div id="frameList"></div>
+
+    <div class="buttons">
+
+        <button
+            class="btn-secondary"
+            onclick="goHome()">
+
+            ← กลับ
+
+        </button>
+
+        <button
+            id="startButton"
+            class="btn-primary"
+            disabled
+            onclick="startCamera()">
+
+            📸 เลือกกรอบแล้ว ถ่ายรูป
+
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     CAMERA
+===================================================== -->
+
+<section id="cameraScreen"
+         class="screen hidden">
+
+    <h1>📸 ถ่ายรูป</h1>
+
+    <div class="status"
+         id="cameraStatus">
+
+        เตรียมกล้อง...
+
+    </div>
+
+    <div class="camera-wrap">
+
+        <div class="camera-box">
+
+            <video
+                id="video"
+                autoplay
+                playsinline>
+            </video>
+
+            <div
+                id="countdown"
+                class="countdown">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="photo-preview"
+         id="photoPreview">
+    </div>
+
+    <div class="buttons">
+
+        <button
+            class="btn-secondary"
+            onclick="stopCamera(); showScreen('frameScreen')">
+
+            ← เปลี่ยนกรอบ
+
+        </button>
+
+        <button
+            id="takeButton"
+            class="btn-primary"
+            onclick="takePhotoSequence()">
+
+            📸 เริ่มถ่าย 3 รูป
+
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     RESULT
+===================================================== -->
+
+<section id="resultScreen"
+         class="screen hidden">
+
+    <h1>🎉 รูปของคุณ</h1>
+
+    <div class="status"
+         id="resultStatus">
+
+        รูปพร้อมแล้ว
+
+    </div>
+
+    <div
+        id="printArea"
+        class="result-wrap">
+
+        <canvas
+            id="finalCanvas"
+            width="600"
+            height="1800">
+        </canvas>
+
+    </div>
+
+    <div class="buttons">
+
+        <button
+            class="btn-secondary"
+            onclick="showScreen('homeScreen')">
+
+            🏠 หน้าแรก
+
+        </button>
+
+        <button
+            class="btn-blue"
+            onclick="downloadImage()">
+
+            ⬇️ ดาวน์โหลด
+
+        </button>
+
+        <button
+            class="btn-pink"
+            onclick="printPhoto()">
+
+            🖨️ พิมพ์รูป
+
+        </button>
+
+        <button
+            id="driveButton"
+            class="btn-drive"
+            onclick="uploadToGoogleDrive()">
+
+            ☁️ บันทึก Google Drive
+
+        </button>
+
+    </div>
+
+</section>
+
+
+<script>
+
+/* =====================================================
+   CONFIGURATION
+===================================================== */
+
+const CONFIG = {
+
+    githubOwner: "61sw30145-commits",
+
+    githubRepo: "photoone",
+
+    githubBranch: "main",
+
+    framesPath: "frames",
+
+    canvasWidth: 600,
+
+    canvasHeight: 1800,
+
+    defaultSlots: [
+
+        {
+            x: 60,
+            y: 120,
+            width: 480,
+            height: 450
+        },
+
+        {
+            x: 60,
+            y: 630,
+            width: 480,
+            height: 450
+        },
+
+        {
+            x: 60,
+            y: 1160,
+            width: 480,
+            height: 450
+        }
+
+    ],
+
+    /*
+     * ใส่ Google OAuth Client ID ตรงนี้
+     * หลังจากสร้าง OAuth Client ID แล้ว
+     *
+     * ตัวอย่าง:
+     *
+     * googleClientId:
+     * "1234567890-xxxxx.apps.googleusercontent.com"
+     */
+
+    googleClientId: "",
+
+    googleDriveFolderId: ""
+
+};
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let frames = [];
+
+let selectedFrame = null;
+
+let selectedSlots =
+    CONFIG.defaultSlots;
+
+let stream = null;
+
+let photos = [];
+
+let finalImageData = null;
+
+
+/* =====================================================
+   SCREEN CONTROL
+===================================================== */
+
+function showScreen(id) {
+
+    document
+        .querySelectorAll(".screen")
+        .forEach(el => {
+            el.classList.add("hidden");
+        });
+
+    document
+        .getElementById(id)
+        .classList.remove("hidden");
+
+}
+
+
+function goHome() {
+
+    stopCamera();
+
+    showScreen("homeScreen");
+
+}
+
+
+/* =====================================================
+   FRAME LOADING
+===================================================== */
+
+async function loadFrames() {
+
+    const status =
+        document.getElementById("frameStatus");
+
+    const list =
+        document.getElementById("frameList");
+
+    status.textContent =
+        "กำลังค้นหากรอบจาก GitHub...";
+
+    list.innerHTML = "";
+
+    try {
+
+        const url =
+            `https://api.github.com/repos/` +
+            `${CONFIG.githubOwner}/` +
+            `${CONFIG.githubRepo}/contents/` +
+            `${CONFIG.framesPath}?ref=${CONFIG.githubBranch}`;
+
+        const response =
+            await fetch(url, {
+                headers: {
+                    "Accept":
+                        "application/vnd.github+json"
+                }
+            });
+
+        if (!response.ok) {
+
+            throw new Error(
+                "ไม่สามารถอ่านโฟลเดอร์ frames ได้"
+            );
+
+        }
+
+        const files =
+            await response.json();
+
+        const pngFiles =
+            files
+                .filter(file => {
+
+                    if (file.type !== "file") {
+                        return false;
+                    }
+
+                    return /\.(png|jpg|jpeg|webp)$/i
+                        .test(file.name);
+
+                })
+                .sort((a,b) =>
+                    a.name.localeCompare(
+                        b.name,
+                        undefined,
+                        {
+                            numeric: true,
+                            sensitivity: "base"
+                        }
+                    )
+                );
+
+        frames = [];
+
+        for (const file of pngFiles) {
+
+            frames.push({
+
+                name: file.name,
+
+                url:
+                    `https://raw.githubusercontent.com/` +
+                    `${CONFIG.githubOwner}/` +
+                    `${CONFIG.githubRepo}/` +
+                    `refs/heads/` +
+                    `${CONFIG.githubBranch}/` +
+                    `${CONFIG.framesPath}/` +
+                    encodeURIComponent(file.name)
+
+            });
+
+        }
+
+        if (!frames.length) {
+
+            status.textContent =
+                "ยังไม่มีกรอบในโฟลเดอร์ frames";
+
+            return;
+
+        }
+
+        status.textContent =
+            `มีกกรอบ ${frames.length} แบบ`;
+
+        renderFrames();
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "โหลดกรอบไม่สำเร็จ";
+
+        list.innerHTML = `
+            <div class="status error">
+                ${escapeHtml(error.message)}
+            </div>
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   RENDER FRAME LIST
+===================================================== */
+
+function renderFrames() {
+
+    const list =
+        document.getElementById("frameList");
+
+    list.innerHTML = "";
+
+    frames.forEach((frame, index) => {
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "frame-card";
+
+        card.dataset.index =
+            index;
+
+        const img =
+            document.createElement("img");
+
+        img.className =
+            "frame-image";
+
+        img.src =
+            frame.url;
+
+        img.alt =
+            frame.name;
+
+        const name =
+            document.createElement("div");
+
+        name.className =
+            "frame-name";
+
+        name.textContent =
+            `กรอบที่ ${index + 1}`;
+
+        card.appendChild(img);
+
+        card.appendChild(name);
+
+        card.addEventListener(
+            "click",
+            () => selectFrame(index)
+        );
+
+        list.appendChild(card);
+
+    });
+
+}
+
+
+/* =====================================================
+   SELECT FRAME
+===================================================== */
+
+async function selectFrame(index) {
+
+    selectedFrame =
+        frames[index];
+
+    selectedSlots =
+        CONFIG.defaultSlots;
+
+    document
+        .querySelectorAll(".frame-card")
+        .forEach(card => {
+
+            card.classList.remove("selected");
+
+        });
+
+    const selectedCard =
+        document.querySelector(
+            `.frame-card[data-index="${index}"]`
+        );
+
+    if (selectedCard) {
+        selectedCard.classList.add("selected");
+    }
+
+    /*
+     * พยายามโหลด JSON ที่มีชื่อเดียวกับ PNG
+     *
+     * frame1.png
+     * frame1.json
+     */
+
+    try {
+
+        const jsonName =
+            selectedFrame.name
+                .replace(
+                    /\.(png|jpg|jpeg|webp)$/i,
+                    ".json"
+                );
+
+        const jsonUrl =
+            `https://raw.githubusercontent.com/` +
+            `${CONFIG.githubOwner}/` +
+            `${CONFIG.githubRepo}/` +
+            `refs/heads/` +
+            `${CONFIG.githubBranch}/` +
+            `${CONFIG.framesPath}/` +
+            encodeURIComponent(jsonName);
+
+        const response =
+            await fetch(jsonUrl);
+
+        if (response.ok) {
+
+            const data =
+                await response.json();
+
+            if (
+                Array.isArray(data.slots) &&
+                data.slots.length >= 3
+            ) {
+
+                selectedSlots =
+                    data.slots.slice(0, 3);
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.log(
+            "ใช้ตำแหน่งช่องมาตรฐาน",
+            error
+        );
+
+    }
+
+    document
+        .getElementById("startButton")
+        .disabled = false;
+
+}
+
+
+/* =====================================================
+   OPEN FRAME SELECTOR
+===================================================== */
+
+function openFrameSelector() {
+
+    showScreen("frameScreen");
+
+    loadFrames();
+
+}
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+async function startCamera() {
+
+    if (!selectedFrame) {
+
+        alert("กรุณาเลือกกรอบก่อน");
+
+        return;
+
+    }
+
+    showScreen("cameraScreen");
+
+    photos = [];
+
+    renderPhotoPreview();
+
+    try {
+
+        stream =
+            await navigator.mediaDevices
+                .getUserMedia({
+
+                    video: {
+                        facingMode: "user",
+                        width: {
+                            ideal: 1920
+                        },
+                        height: {
+                            ideal: 1080
+                        }
+                    },
+
+                    audio: false
+
+                });
+
+        const video =
+            document.getElementById("video");
+
+        video.srcObject =
+            stream;
+
+        document
+            .getElementById("cameraStatus")
+            .textContent =
+            "พร้อมถ่าย";
+
+    } catch (error) {
+
+        console.error(error);
+
+        document
+            .getElementById("cameraStatus")
+            .textContent =
+            "ไม่สามารถเปิดกล้องได้";
+
+        alert(
+            "กรุณาอนุญาตให้เว็บไซต์ใช้กล้อง"
+        );
+
+    }
+
+}
+
+
+function stopCamera() {
+
+    if (stream) {
+
+        stream
+            .getTracks()
+            .forEach(track =>
+                track.stop()
+            );
+
+        stream = null;
+
+    }
+
+}
+
+
+/* =====================================================
+   TAKE 3 PHOTOS
+===================================================== */
+
+async function takePhotoSequence() {
+
+    if (!stream) {
+
+        alert("ยังไม่เปิดกล้อง");
+
+        return;
+
+    }
+
+    const button =
+        document.getElementById("takeButton");
+
+    button.disabled = true;
+
+    photos = [];
+
+    renderPhotoPreview();
+
+    for (
+        let i = 0;
+        i < 3;
+        i++
+    ) {
+
+        await countdown(3);
+
+        const photo =
+            capturePhoto();
+
+        photos.push(photo);
+
+        renderPhotoPreview();
+
+        await sleep(700);
+
+    }
+
+    button.disabled = false;
+
+    stopCamera();
+
+    createFinalImage();
+
+}
+
+
+/* =====================================================
+   COUNTDOWN
+===================================================== */
+
+function countdown(seconds) {
+
+    return new Promise(resolve => {
+
+        const el =
+            document.getElementById(
+                "countdown"
+            );
+
+        let number =
+            seconds;
+
+        el.textContent =
+            number;
+
+        const timer =
+            setInterval(() => {
+
+                number--;
+
+                if (number <= 0) {
+
+                    clearInterval(timer);
+
+                    el.textContent = "";
+
+                    resolve();
+
+                } else {
+
+                    el.textContent =
+                        number;
+
+                }
+
+            }, 1000);
+
+    });
+
+}
+
+
+/* =====================================================
+   CAPTURE CAMERA
+===================================================== */
+
+function capturePhoto() {
+
+    const video =
+        document.getElementById("video");
+
+    const canvas =
+        document.createElement("canvas");
+
+    const width =
+        video.videoWidth;
+
+    const height =
+        video.videoHeight;
+
+    canvas.width =
+        width;
+
+    canvas.height =
+        height;
+
+    const ctx =
+        canvas.getContext("2d");
+
+    /*
+     * กล้องหน้าแสดงผลแบบ mirror
+     * จึงกลับภาพให้เหมือนสิ่งที่ผู้ใช้เห็น
+     */
+
+    ctx.translate(
+        width,
+        0
+    );
+
+    ctx.scale(
+        -1,
+        1
+    );
+
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        width,
+        height
+    );
+
+    return canvas;
+
+}
+
+
+/* =====================================================
+   PHOTO PREVIEW
+===================================================== */
+
+function renderPhotoPreview() {
+
+    const container =
+        document.getElementById(
+            "photoPreview"
+        );
+
+    container.innerHTML = "";
+
+    photos.forEach(photo => {
+
+        const img =
+            document.createElement("img");
+
+        img.src =
+            photo.toDataURL(
+                "image/jpeg",
+                .92
+            );
+
+        container.appendChild(img);
+
+    });
+
+}
+
+
+/* =====================================================
+   CREATE FINAL IMAGE
+===================================================== */
+
+async function createFinalImage() {
+
+    if (
+        !selectedFrame ||
+        photos.length !== 3
+    ) {
+
+        return;
+
+    }
+
+    const canvas =
+        document.getElementById(
+            "finalCanvas"
+        );
+
+    canvas.width =
+        CONFIG.canvasWidth;
+
+    canvas.height =
+        CONFIG.canvasHeight;
+
+    const ctx =
+        canvas.getContext("2d");
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    /*
+     * พื้นหลัง
+     */
+
+    ctx.fillStyle =
+        "#ffffff";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    /*
+     * วาดรูปทั้ง 3 รูป
+     */
+
+    for (
+        let i = 0;
+        i < 3;
+        i++
+    ) {
+
+        drawCoverImage(
+            ctx,
+            photos[i],
+            selectedSlots[i]
+        );
+
+    }
+
+    /*
+     * รอโหลดกรอบ
+     */
+
+    const frameImage =
+        await loadImage(
+            selectedFrame.url
+        );
+
+    /*
+     * กรอบอยู่ด้านบน
+     */
+
+    ctx.drawImage(
+        frameImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    finalImageData =
+        canvas.toDataURL(
+            "image/jpeg",
+            .95
+        );
+
+    document
+        .getElementById(
+            "resultStatus"
+        )
+        .textContent =
+        "สร้างรูปเรียบร้อยแล้ว";
+
+    showScreen(
+        "resultScreen"
+    );
+
+}
+
+
+/* =====================================================
+   DRAW COVER IMAGE
+===================================================== */
+
+function drawCoverImage(
+    ctx,
+    image,
+    slot
+) {
+
+    const sx =
+        image.width;
+
+    const sy =
+        image.height;
+
+    const targetRatio =
+        slot.width /
+        slot.height;
+
+    const sourceRatio =
+        sx / sy;
+
+    let cropWidth =
+        sx;
+
+    let cropHeight =
+        sy;
+
+    let cropX = 0;
+
+    let cropY = 0;
+
+    if (
+        sourceRatio >
+        targetRatio
+    ) {
+
+        cropWidth =
+            sy * targetRatio;
+
+        cropX =
+            (sx - cropWidth) / 2;
+
+    } else {
+
+        cropHeight =
+            sx / targetRatio;
+
+        cropY =
+            (sy - cropHeight) / 2;
+
+    }
+
+    ctx.save();
+
+    ctx.beginPath();
+
+    ctx.rect(
+        slot.x,
+        slot.y,
+        slot.width,
+        slot.height
+    );
+
+    ctx.clip();
+
+    ctx.drawImage(
+        image,
+
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+
+        slot.x,
+        slot.y,
+        slot.width,
+        slot.height
+    );
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   IMAGE LOADER
+===================================================== */
+
+function loadImage(src) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const img =
+                new Image();
+
+            img.crossOrigin =
+                "anonymous";
+
+            img.onload =
+                () => resolve(img);
+
+            img.onerror =
+                reject;
+
+            img.src =
+                src;
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   DOWNLOAD
+===================================================== */
+
+function downloadImage() {
+
+    if (!finalImageData) {
+
+        alert("ยังไม่มีรูป");
+
+        return;
+
+    }
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        finalImageData;
+
+    link.download =
+        `J-PHOTO-${formatDate()}.jpg`;
+
+    document
+        .body
+        .appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+}
+
+
+/* =====================================================
+   PRINT
+===================================================== */
+
+function printPhoto() {
+
+    if (!finalImageData) {
+
+        alert("ยังไม่มีรูป");
+
+        return;
+
+    }
+
+    window.print();
+
+}
+
+
+/* =====================================================
+   GOOGLE DRIVE
+===================================================== */
+
+/*
+ * Google Drive ต้องใช้ OAuth
+ *
+ * ไม่มีทางให้ GitHub Pages
+ * อัปโหลดเข้า Drive ของเจ้าของ
+ * โดยไม่ขอสิทธิ์จาก Google
+ *
+ * ใช้ Google Identity Services
+ */
+
+let googleAccessToken = null;
+
+let tokenClient = null;
+
+
+function loadGoogleScripts() {
+
+    if (
+        document.getElementById(
+            "google-gsi-script"
+        )
+    ) {
+
+        return Promise.resolve();
+
+    }
+
+    return new Promise(resolve => {
+
+        const script =
+            document.createElement("script");
+
+        script.id =
+            "google-gsi-script";
+
+        script.src =
+            "https://accounts.google.com/gsi/client";
+
+        script.onload =
+            resolve;
+
+        document
+            .head
+            .appendChild(script);
+
+    });
+
+}
+
+
+async function uploadToGoogleDrive() {
+
+    if (!finalImageData) {
+
+        alert("ยังไม่มีรูป");
+
+        return;
+
+    }
+
+    if (
+        !CONFIG.googleClientId
+    ) {
+
+        alert(
+            "ยังไม่ได้ตั้งค่า Google Client ID"
+        );
+
+        return;
+
+    }
+
+    try {
+
+        await loadGoogleScripts();
+
+        if (!tokenClient) {
+
+            tokenClient =
+                google.accounts.oauth2
+                    .initTokenClient({
+
+                        client_id:
+                            CONFIG.googleClientId,
+
+                        scope:
+                            "https://www.googleapis.com/auth/drive.file",
+
+                        callback:
+                            async response => {
+
+                                if (
+                                    response.error
+                                ) {
+
+                                    console.error(
+                                        response
+                                    );
+
+                                    alert(
+                                        "ไม่สามารถอนุญาต Google Drive ได้"
+                                    );
+
+                                    return;
+
+                                }
+
+                                googleAccessToken =
+                                    response.access_token;
+
+                                await sendImageToDrive();
+
+                            }
+
+                    });
+
+        }
+
+        tokenClient.requestAccessToken();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "ไม่สามารถเชื่อมต่อ Google Drive"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   SEND IMAGE TO DRIVE
+===================================================== */
+
+async function sendImageToDrive() {
+
+    const button =
+        document.getElementById(
+            "driveButton"
+        );
+
+    button.disabled =
+        true;
+
+    button.textContent =
+        "☁️ กำลังบันทึก...";
+
+    try {
+
+        const blob =
+            dataURLToBlob(
+                finalImageData
+            );
+
+        const metadata = {
+
+            name:
+                `J-PHOTO-${formatDate()}.jpg`,
+
+            mimeType:
+                "image/jpeg"
+
+        };
+
+        /*
+         * ถ้ากำหนด Folder ID
+         * ให้บันทึกเข้าโฟลเดอร์นั้น
+         */
+
+        if (
+            CONFIG.googleDriveFolderId
+        ) {
+
+            metadata.parents = [
+                CONFIG.googleDriveFolderId
+            ];
+
+        }
+
+        const boundary =
+            "-------JPHOTOBOOTH" +
+            Date.now();
+
+        const delimiter =
+            `\r\n--${boundary}\r\n`;
+
+        const closeDelimiter =
+            `\r\n--${boundary}--`;
+
+        const body =
+            new Blob([
+
+                delimiter,
+
+                "Content-Type: application/json; charset=UTF-8\r\n\r\n",
+
+                JSON.stringify(metadata),
+
+                delimiter,
+
+                "Content-Type: image/jpeg\r\n\r\n",
+
+                blob,
+
+                closeDelimiter
+
+            ], {
+                type:
+                    `multipart/related; boundary=${boundary}`
+            });
+
+        const response =
+            await fetch(
+                "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${googleAccessToken}`
+
+                    },
+
+                    body
+
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (!response.ok) {
+
+            console.error(result);
+
+            throw new Error(
+                result.error?.message ||
+                "Upload failed"
+            );
+
+        }
+
+        button.textContent =
+            "✅ บันทึกแล้ว";
+
+        document
+            .getElementById(
+                "resultStatus"
+            )
+            .textContent =
+            "บันทึกรูปลง Google Drive แล้ว";
+
+    } catch (error) {
+
+        console.error(error);
+
+        button.textContent =
+            "☁️ บันทึก Google Drive";
+
+        alert(
+            "บันทึก Google Drive ไม่สำเร็จ\n" +
+            error.message
+        );
+
+    } finally {
+
+        button.disabled =
+            false;
+
+    }
+
+}
+
+
+/* =====================================================
+   DATA URL -> BLOB
+===================================================== */
+
+function dataURLToBlob(dataURL) {
+
+    const parts =
+        dataURL.split(",");
+
+    const mime =
+        parts[0]
+            .match(/:(.*?);/)[1];
+
+    const binary =
+        atob(parts[1]);
+
+    const array =
+        new Uint8Array(
+            binary.length
+        );
+
+    for (
+        let i = 0;
+        i < binary.length;
+        i++
+    ) {
+
+        array[i] =
+            binary.charCodeAt(i);
+
+    }
+
+    return new Blob(
+        [array],
+        {
+            type: mime
+        }
+    );
+
+}
+
+
+/* =====================================================
+   UTILITIES
+===================================================== */
+
+function sleep(ms) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+
+}
+
+
+function formatDate() {
+
+    const d =
+        new Date();
+
+    const pad =
+        n =>
+            String(n)
+                .padStart(2, "0");
+
+    return (
+        d.getFullYear() +
+        pad(d.getMonth() + 1) +
+        pad(d.getDate()) +
+        "-" +
+        pad(d.getHours()) +
+        pad(d.getMinutes()) +
+        pad(d.getSeconds())
+    );
+
+}
+
+
+function escapeHtml(text) {
+
+    return String(text)
+        .replace(
+            /[&<>"']/g,
+            char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+            }[char])
+        );
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+window.addEventListener(
+    "load",
+    () => {
+
+        showScreen(
+            "homeScreen"
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>    display: flex;
     flex-direction: column;
     align-items: center;
 }
