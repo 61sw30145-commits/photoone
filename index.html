@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#111111">
+  <title>J PHOTO BOOTH</title>
+
+  <style>
+    :root {
+      --bg: #101010;
+      --panel: #1b1b1b;
+      --text: #fff;
+      --muted: #aaa;
+      --primary: #00c853;
+      --blue: #2196f3;
+      --danger: #ff5252;
+      --gold: #ffd54f;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body { overflow-x: hidden; }
+
+    .screen {
+      min-height: 100svh;
+      padding: 24px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hidden { display: none !important; }
+
+    h1 { font-size: clamp(28px, 6vw, 44px); margin: 12px 0; }
+    h2 { margin: 10px 0 18px; }
+    p { color: var(--muted); font-size: 18px; }
+
+    button {
+      border: 0;
+      border-radius: 18px;
+      padding: 17px 28px;
+      margin: 8px;
+      min-height: 56px;
+      font-size: 20px;
+      font-weight: 800;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:disabled { opacity: .45; }
+
+    .primary { background: var(--primary); color: white; }
+    .blue { background: var(--blue); color: white; }
+    .danger { background: var(--danger); color: white; }
+    .dark { background: #333; color: white; }
+    .gold { background: var(--gold); color: #111; }
+
+    .camera-wrap {
+      position: relative;
+      width: min(94vw, 850px);
+    }
+
+    #camera {
+      width: 100%;
+      max-height: 70svh;
+      object-fit: cover;
+      border-radius: 24px;
+      background: #000;
+      transform: scaleX(-1);
+    }
+
+    #countdown {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(90px, 25vw, 180px);
+      font-weight: 900;
+      text-shadow: 0 4px 30px #000;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .counter {
+      font-size: 20px;
+      margin: 12px;
+      font-weight: 700;
+    }
+
+    .photo-grid {
+      width: min(94vw, 700px);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .photo-grid img {
+      width: 100%;
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .frame-grid {
+      width: min(96vw, 900px);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .frame-card {
+      background: #222;
+      border: 4px solid transparent;
+      border-radius: 18px;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .frame-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(0,200,83,.2);
+    }
+
+    .frame-card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 3;
+      object-fit: contain;
+      background: white;
+      border-radius: 10px;
+    }
+
+    .frame-name {
+      margin: 8px 4px 2px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #finalCanvas {
+      width: min(88vw, 420px);
+      height: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.4);
+    }
+
+    .qr-box {
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 20px;
+      background: white;
+      color: #111;
+    }
+
+    #qr {
+      width: 230px;
+      height: 230px;
+      display: block;
+      margin: auto;
+    }
+
+    .status {
+      min-height: 28px;
+      color: white;
+      font-weight: 700;
+    }
+
+    .logo {
+      font-size: 70px;
+      margin-top: 8vh;
+    }
+
+    .small {
+      font-size: 14px;
+      color: #888;
+    }
+
+    .loading {
+      padding: 30px;
+      font-size: 20px;
+      color: #ccc;
+    }
+
+    .admin-tip {
+      width: min(92vw, 800px);
+      background: #191919;
+      border: 1px solid #333;
+      padding: 12px 16px;
+      border-radius: 14px;
+      margin-top: 18px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    @media (min-width: 700px) {
+      .frame-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HOME -->
+  <section id="home" class="screen">
+    <div class="logo">📸</div>
+    <h1>J PHOTO BOOTH</h1>
+    <p>ถ่ายรูป • เลือกกรอบ • พิมพ์ • รับรูปด้วย QR</p>
+    <button class="primary" onclick="startCamera()">เริ่มถ่ายรูป</button>
+
+    <div class="admin-tip">
+      เพิ่มกรอบใหม่ได้จาก Google Drive โดยอัปโหลดไฟล์ PNG/JPG
+      เข้าโฟลเดอร์ FRAMES แล้วรีเฟรชแอป ไม่ต้องแก้โค้ด
+    </div>
+  </section>
+
+  <!-- CAMERA -->
+  <section id="cameraScreen" class="screen hidden">
+    <h1>📸 เตรียมตัว</h1>
+
+    <div class="camera-wrap">
+      <video id="camera" autoplay playsinline muted></video>
+    </div>
+
+    <div id="countdown"></div>
+    <div id="photoCounter" class="counter">รูปที่ 1 / 4</div>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="reviewScreen" class="screen hidden">
+    <h1>ตรวจสอบรูป</h1>
+
+    <div id="photoList" class="photo-grid"></div>
+
+    <div>
+      <button class="danger" onclick="restart()">ถ่ายใหม่</button>
+      <button class="primary" onclick="openFrameSelector()">เลือกกรอบ</button>
+    </div>
+  </section>
+
+  <!-- FRAME SELECTOR -->
+  <section id="frameScreen" class="screen hidden">
+    <h1>เลือกกรอบรูป</h1>
+    <p id="frameStatus">กำลังโหลดกรอบ...</p>
+
+    <div id="frameList" class="frame-grid"></div>
+
+    <div>
+      <button class="dark" onclick="showScreen('reviewScreen')">ย้อนกลับ</button>
+      <button id="useFrameBtn" class="primary" onclick="createFinalPhoto()" disabled>
+        ใช้กรอบนี้
+      </button>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="finalScreen" class="screen hidden">
+    <h1>🎉 รูปของคุณ</h1>
+
+    <canvas id="finalCanvas"></canvas>
+
+    <div>
+      <button class="blue" onclick="printPhoto()">🖨️ พิมพ์รูป</button>
+      <button class="primary" onclick="saveAndQR()">📱 รับรูปผ่าน QR</button>
+    </div>
+
+    <p id="status" class="status"></p>
+
+    <div id="qrArea" class="qr-box hidden">
+      <h2>สแกนเพื่อดาวน์โหลดรูป</h2>
+      <img id="qr" alt="QR Code">
+      <p style="color:#333">ใช้กล้องมือถือสแกน QR Code</p>
+      <a id="downloadLink" target="_blank" rel="noopener">⬇️ ดาวน์โหลดรูป</a>
+    </div>
+
+    <button class="dark" onclick="restart()">เริ่มรายการใหม่</button>
+  </section>
+
+<script>
+  const PHOTO_COUNT = 4;
+
+  let video = null;
+  let stream = null;
+  let photos = [];
+  let currentPhoto = 0;
+
+  let frames = [];
+  let selectedFrameIndex = 0;
+  let finalImage = null;
+
+  // 2 x 6 inches at 300 DPI
+  const OUTPUT_WIDTH = 600;
+  const OUTPUT_HEIGHT = 1800;
+
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(el => el.classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+    window.scrollTo(0, 0);
+  }
+
+  async function startCamera() {
+    showScreen("cameraScreen");
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 1920 }
+        },
+        audio: false
+      });
+
+      video = document.getElementById("camera");
+      video.srcObject = stream;
+      await video.play();
+
+      photos = [];
+      currentPhoto = 0;
+
+      setTimeout(takePhoto, 800);
+
+    } catch (error) {
+      alert("เปิดกล้องไม่ได้\n\n" + error.message);
+      showScreen("home");
+    }
+  }
+
+  function countdown(seconds) {
+    return new Promise(resolve => {
+      let n = seconds;
+      const el = document.getElementById("countdown");
+      el.textContent = n;
+
+      const timer = setInterval(() => {
+        n--;
+
+        if (n <= 0) {
+          clearInterval(timer);
+          el.textContent = "";
+          resolve();
+        } else {
+          el.textContent = n;
+        }
+      }, 1000);
+    });
+  }
+
+  async function takePhoto() {
+    currentPhoto++;
+
+    document.getElementById("photoCounter").textContent =
+      `รูปที่ ${currentPhoto} / ${PHOTO_COUNT}`;
+
+    await countdown(3);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 1920;
+
+    const ctx = canvas.getContext("2d");
+
+    // Mirror the saved image so it matches the preview.
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    photos.push(canvas.toDataURL("image/jpeg", 0.92));
+
+    if (currentPhoto < PHOTO_COUNT) {
+      setTimeout(takePhoto, 700);
+    } else {
+      stopCamera();
+      showReview();
+    }
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+  }
+
+  function showReview() {
+    showScreen("reviewScreen");
+
+    const list = document.getElementById("photoList");
+    list.innerHTML = "";
+
+    photos.forEach((photo, i) => {
+      const img = document.createElement("img");
+      img.src = photo;
+      img.alt = "รูป " + (i + 1);
+      list.appendChild(img);
+    });
+  }
+
+  async function openFrameSelector() {
+    showScreen("frameScreen");
+
+    const list = document.getElementById("frameList");
+    const status = document.getElementById("frameStatus");
+    const btn = document.getElementById("useFrameBtn");
+
+    list.innerHTML = "";
+    btn.disabled = true;
+
+    status.textContent = "กำลังโหลดกรอบจาก Google Drive...";
+
+    try {
+      frames = await runServer("getFrames");
+
+      if (!frames.length) {
+        status.textContent =
+          "ยังไม่มีกรอบในโฟลเดอร์ FRAMES — ให้อัปโหลด PNG/JPG แล้วเปิดหน้านี้ใหม่";
+        return;
+      }
+
+      status.textContent = `มีกรอบ ${frames.length} แบบ`;
+
+      if (selectedFrameIndex >= frames.length) {
+        selectedFrameIndex = 0;
+      }
+
+      frames.forEach((frame, index) => {
+        const card = document.createElement("div");
+        card.className = "frame-card" + (index === selectedFrameIndex ? " selected" : "");
+
+        const img = document.createElement("img");
+        img.src = frame.dataUrl;
+        img.alt = frame.name;
+
+        const name = document.createElement("div");
+        name.className = "frame-name";
+        name.textContent = frame.name;
+
+        card.appendChild(img);
+        card.appendChild(name);
+
+        card.onclick = () => {
+          selectedFrameIndex = index;
+          document.querySelectorAll(".frame-card").forEach(c => c.classList.remove("selected"));
+          card.classList.add("selected");
+          btn.disabled = false;
+        };
+
+        list.appendChild(card);
+      });
+
+      btn.disabled = false;
+
+    } catch (error) {
+      status.textContent = "โหลดกรอบไม่สำเร็จ: " + error.message;
+    }
+  }
+
+  function createFinalPhoto() {
+    if (!frames.length) {
+      alert("ยังไม่มีกรอบ");
+      return;
+    }
+
+    const canvas = document.getElementById("finalCanvas");
+    canvas.width = OUTPUT_WIDTH;
+    canvas.height = OUTPUT_HEIGHT;
+
+    const ctx = canvas.getContext("2d");
+
+    // White background first.
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw four photos vertically.
+    const marginX = 42;
+    const top = 45;
+    const gap = 18;
+    const bottomArea = 150;
+
+    const photoW = canvas.width - marginX * 2;
+    const availableH =
+      canvas.height - top - bottomArea - gap * (PHOTO_COUNT - 1);
+
+    const photoH = Math.floor(availableH / PHOTO_COUNT);
+
+    const imagePromises = photos.map(src => loadImage(src));
+
+    Promise.all(imagePromises).then(images => {
+      images.forEach((img, i) => {
+        const y = top + i * (photoH + gap);
+        drawCover(ctx, img, marginX, y, photoW, photoH);
+      });
+
+      // Load the selected overlay frame.
+      const frame = new Image();
+      frame.onload = () => {
+        // Frame is an overlay. Design your PNG with transparent photo windows.
+        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+
+        finalImage = canvas.toDataURL("image/jpeg", 0.95);
+        showScreen("finalScreen");
+      };
+
+      frame.onerror = () => {
+        alert("ไฟล์กรอบนี้โหลดไม่ได้");
+      };
+
+      frame.src = frames[selectedFrameIndex].dataUrl;
+    });
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function drawCover(ctx, img, x, y, w, h) {
+    const scale = Math.max(w / img.width, h / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    const dx = x + (w - dw) / 2;
+    const dy = y + (h - dh) / 2;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.restore();
+  }
+
+  function printPhoto() {
+    if (!finalImage) {
+      alert("ยังไม่มีรูปสำหรับพิมพ์");
+      return;
+    }
+
+    // iPad/Safari will show the AirPrint print sheet.
+    const win = window.open("", "_blank");
+
+    if (!win) {
+      alert("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up");
+      return;
+    }
+
+    win.document.open();
+    win.document.write(`
+      <!doctype html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>J PHOTO BOOTH</title>
+        <style>
+          @page { size: 2in 6in; margin: 0; }
+          html, body {
+            margin: 0;
+            padding: 0;
+            width: 2in;
+            height: 6in;
+            background: white;
+          }
+          img {
+            display: block;
+            width: 2in;
+            height: 6in;
+          }
+        </style>
+      </head>
+      <body>
+        <img src="${finalImage}">
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 400);
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+    win.document.close();
+  }
+
+  async function saveAndQR() {
+    if (!finalImage) {
+      alert("ยังไม่มีรูป");
+      return;
+    }
+
+    const status = document.getElementById("status");
+    status.textContent = "กำลังบันทึกรูปลง Google Drive...";
+
+    const fileName =
+      "J-PHOTO-" +
+      new Date().toISOString().replace(/[:.]/g, "-") +
+      ".jpg";
+
+    try {
+      const result = await runServer("uploadPhoto", finalImage, fileName);
+
+      const qrUrl =
+        "https://quickchart.io/qr?size=400&text=" +
+        encodeURIComponent(result.downloadUrl);
+
+      document.getElementById("qr").src = qrUrl;
+      document.getElementById("downloadLink").href = result.downloadUrl;
+
+      document.getElementById("qrArea").classList.remove("hidden");
+
+      status.textContent = "✅ พร้อมให้ลูกค้าสแกน QR แล้ว";
+
+    } catch (error) {
+      status.textContent = "❌ บันทึกรูปไม่สำเร็จ: " + error.message;
+    }
+  }
+
+  function runServer(functionName, ...args) {
+    return new Promise((resolve, reject) => {
+      const runner = google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject);
+
+      runner[functionName](...args);
+    });
+  }
+
+  function restart() {
+    stopCamera();
+
+    photos = [];
+    currentPhoto = 0;
+    frames = [];
+    selectedFrameIndex = 0;
+    finalImage = null;
+
+    document.getElementById("qrArea").classList.add("hidden");
+    document.getElementById("status").textContent = "";
+
+    showScreen("home");
+  }
+
+  // Prevent accidental page zoom on repeated touch gestures.
+  document.addEventListener("gesturestart", e => e.preventDefault());
+</script>
+
+</body>
+</html>
