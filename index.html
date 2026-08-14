@@ -1,39 +1,154 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <base target="_top">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#111111">
-  <title>J PHOTO BOOTH</title>
+/**
+ * J PHOTO BOOTH - Google Apps Script
+ * ------------------------------------------------------------
+ * 1) หน้าเว็บเลือกกรอบจากโฟลเดอร์ FRAMES
+ * 2) ถ่าย 3 รูป
+ * 3) index.html เรียก uploadPhoto() เพื่อบันทึกรูป
+ *
+ * ตั้งค่า:
+ * FRAME_FOLDER_ID = โฟลเดอร์ Google Drive สำหรับเก็บกรอบ
+ *
+ * ถ้าต้องการเก็บรูปที่ถ่ายไว้คนละโฟลเดอร์
+ * ให้ใส่ OUTPUT_FOLDER_ID ได้
+ */
 
-  <style>
-    :root {
-      --bg: #101010;
-      --panel: #1b1b1b;
-      --text: #fff;
-      --muted: #aaa;
-      --primary: #00c853;
-      --blue: #2196f3;
-      --danger: #ff5252;
-      --gold: #ffd54f;
+const FRAME_FOLDER_ID = '11q0vtZhnZHIx_p6DvtXdYt-GAD3p3u2s';
+
+// ถ้ามีโฟลเดอร์เก็บรูปที่ถ่ายโดยเฉพาะ ให้ใส่ Folder ID ตรงนี้
+// ถ้าเว้นว่าง รูปจะถูกบันทึกไว้ใน My Drive ของเจ้าของสคริปต์
+const OUTPUT_FOLDER_ID = '';
+
+/**
+ * เปิดหน้าเว็บ
+ */
+function doGet() {
+  return HtmlService
+    .createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('J PHOTO BOOTH')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/**
+ * อ่านกรอบรูปจาก Google Drive
+ *
+ * คืนค่าเป็น:
+ * [
+ *   {
+ *     name: 'frame01.png',
+ *     dataUrl: 'data:image/png;base64,...'
+ *   }
+ * ]
+ */
+function getFrames() {
+  const folder = DriveApp.getFolderById(FRAME_FOLDER_ID);
+  const files = folder.getFiles();
+
+  const frames = [];
+
+  while (files.hasNext()) {
+    const file = files.next();
+
+    if (file.isTrashed()) {
+      continue;
     }
 
-    * { box-sizing: border-box; }
+    const mimeType = file.getMimeType();
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      -webkit-user-select: none;
-      user-select: none;
+    // รองรับ PNG/JPG/JPEG/WebP
+    const allowed =
+      mimeType === MimeType.PNG ||
+      mimeType === MimeType.JPEG ||
+      mimeType === 'image/webp';
+
+    if (!allowed) {
+      continue;
     }
+
+    const blob = file.getBlob();
+    const base64 = Utilities.base64Encode(blob.getBytes());
+
+    frames.push({
+      name: file.getName(),
+      dataUrl: 'data:' + mimeType + ';base64,' + base64
+    });
+  }
+
+  // เรียงตามชื่อไฟล์
+  frames.sort(function(a, b) {
+    return a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: 'base'
+    });
+  });
+
+  return frames;
+}
+
+/**
+ * รับรูปจาก index.html แล้วบันทึกเป็น JPG ใน Google Drive
+ *
+ * @param {string} dataUrl - data:image/jpeg;base64,...
+ * @param {string} fileName - ชื่อไฟล์
+ * @return {{downloadUrl:string, fileId:string, fileName:string}}
+ */
+function uploadPhoto(dataUrl, fileName) {
+  if (!dataUrl) {
+    throw new Error('ไม่ได้รับข้อมูลรูปภาพ');
+  }
+
+  const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+
+  if (!match) {
+    throw new Error('รูปภาพอยู่ในรูปแบบที่ไม่ถูกต้อง');
+  }
+
+  const mimeType = match[1];
+  const base64 = match[2];
+
+  const bytes = Utilities.base64Decode(base64);
+  const blob = Utilities.newBlob(
+    bytes,
+    mimeType,
+    fileName || ('J-PHOTO-' + Date.now() + '.jpg')
+  );
+
+  let file;
+
+  if (OUTPUT_FOLDER_ID) {
+    const folder = DriveApp.getFolderById(OUTPUT_FOLDER_ID);
+    file = folder.createFile(blob);
+  } else {
+    file = DriveApp.createFile(blob);
+  }
+
+  // ทำให้ผู้ที่มีลิงก์สามารถดู/ดาวน์โหลดไฟล์ได้
+  file.setSharing(
+    DriveApp.Access.ANYONE_WITH_LINK,
+    DriveApp.Permission.VIEW
+  );
+
+  return {
+    downloadUrl: 'https://drive.google.com/uc?export=download&id=' + file.getId(),
+    fileId: file.getId(),
+    fileName: file.getName()
+  };
+}
+
+/**
+ * ทดสอบระบบกรอบ
+ * ใช้รันจาก Apps Script ได้เลย
+ */
+function testGetFrames() {
+  const frames = getFrames();
+  Logger.log('พบกรอบทั้งหมด: ' + frames.length);
+
+  frames.forEach(function(frame, index) {
+    Logger.log((index + 1) + '. ' + frame.name);
+  });
+
+  return frames.length;
+}
 
     body { overflow-x: hidden; }
 
