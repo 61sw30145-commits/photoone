@@ -1,621 +1,461 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-  >
-
-  <meta name="theme-color" content="#111111">
-
-  <title>J PHOTO BOOTH</title>
-
-  <style>
-    :root {
-      --bg: #101010;
-      --panel: #1b1b1b;
-      --panel2: #242424;
-      --text: #ffffff;
-      --muted: #aaaaaa;
-      --primary: #00c853;
-      --blue: #2196f3;
-      --danger: #ff5252;
-      --gold: #ffd54f;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Arial,
-        sans-serif;
-
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    body {
-      overflow-x: hidden;
-    }
-
-    .screen {
-      min-height: 100svh;
-      width: 100%;
-      padding: 24px 16px 50px;
-
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    h1 {
-      margin: 12px 0;
-      font-size: clamp(30px, 7vw, 48px);
-      text-align: center;
-    }
-
-    h2 {
-      margin: 10px 0 18px;
-      text-align: center;
-    }
-
-    p {
-      color: var(--muted);
-      font-size: 18px;
-      text-align: center;
-    }
-
-    button {
-      border: 0;
-      border-radius: 18px;
-      padding: 16px 26px;
-      margin: 8px;
-      min-height: 56px;
-
-      font-size: 19px;
-      font-weight: 800;
-
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-
-    button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .blue {
-      background: var(--blue);
-      color: white;
-    }
-
-    .danger {
-      background: var(--danger);
-      color: white;
-    }
-
-    .dark {
-      background: #333333;
-      color: white;
-    }
-
-    .gold {
-      background: var(--gold);
-      color: #111111;
-    }
-
-    /* =========================
-       HOME
-    ========================= */
-
-    .logo {
-      font-size: 80px;
-      margin-top: 8vh;
-    }
-
-    .home-buttons {
-      margin-top: 15px;
-    }
-
-    .info-box {
-      width: min(92vw, 700px);
-      margin-top: 25px;
-      padding: 16px 20px;
-
-      background: #191919;
-      border: 1px solid #333;
-      border-radius: 16px;
-
-      color: #aaa;
-      font-size: 14px;
-      line-height: 1.6;
-      text-align: center;
-    }
-
-    /* =========================
-       FRAME SELECTOR
-    ========================= */
-
-    .frame-grid {
-      width: min(94vw, 900px);
-
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-
-      gap: 16px;
-      margin-top: 10px;
-    }
-
-    .frame-card {
-      position: relative;
-
-      background: #222;
-      border: 4px solid transparent;
-
-      border-radius: 18px;
-      padding: 8px;
-
-      cursor: pointer;
-
-      transition:
-        transform 0.15s ease,
-        border-color 0.15s ease;
-    }
-
-    .frame-card:hover {
-      transform: scale(1.02);
-    }
-
-    .frame-card.selected {
-      border-color: var(--primary);
-
-      box-shadow:
-        0 0 0 3px rgba(0, 200, 83, 0.2),
-        0 10px 30px rgba(0, 0, 0, 0.4);
-    }
-
-    .frame-card img {
-      display: block;
-
-      width: 100%;
-      aspect-ratio: 1 / 3;
-
-      object-fit: contain;
-
-      background: white;
-      border-radius: 10px;
-    }
-
-    .frame-name {
-      margin: 9px 4px 4px;
-
-      font-size: 17px;
-      font-weight: 800;
-
-      text-align: center;
-
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .selected-badge {
-      position: absolute;
-
-      top: 12px;
-      right: 12px;
-
-      padding: 7px 10px;
-
-      border-radius: 20px;
-
-      background: var(--primary);
-      color: white;
-
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .frame-empty {
-      width: min(90vw, 600px);
-
-      padding: 30px;
-
-      border-radius: 20px;
-
-      background: #1b1b1b;
-      border: 1px solid #333;
-
-      color: #ccc;
-
-      text-align: center;
-      line-height: 1.7;
-    }
-
-    @media (min-width: 700px) {
-      .frame-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    /* =========================
-       CAMERA
-    ========================= */
-
-    .camera-wrap {
-      position: relative;
-
-      width: min(94vw, 850px);
-
-      margin-top: 10px;
-    }
-
-    #camera {
-      display: block;
-
-      width: 100%;
-      max-height: 70svh;
-
-      object-fit: cover;
-
-      border-radius: 24px;
-
-      background: black;
-
-      transform: scaleX(-1);
-    }
-
-    #countdown {
-      position: fixed;
-
-      inset: 0;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      font-size: clamp(100px, 28vw, 200px);
-
-      font-weight: 900;
-
-      text-shadow: 0 4px 30px black;
-
-      pointer-events: none;
-
-      z-index: 100;
-    }
-
-    .counter {
-      margin: 15px;
-
-      font-size: 21px;
-      font-weight: 800;
-    }
-
-    /* =========================
-       REVIEW
-    ========================= */
-
-    .photo-grid {
-      width: min(94vw, 800px);
-
-      display: grid;
-
-      grid-template-columns: repeat(3, 1fr);
-
-      gap: 12px;
-
-      margin-top: 10px;
-    }
-
-    .photo-grid img {
-      display: block;
-
-      width: 100%;
-
-      border-radius: 14px;
-
-      background: white;
-
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    /* =========================
-       FINAL
-    ========================= */
-
-    #finalCanvas {
-      display: block;
-
-      width: min(88vw, 420px);
-
-      height: auto;
-
-      background: white;
-
-      border-radius: 12px;
-
-      box-shadow:
-        0 15px 50px rgba(0, 0, 0, 0.5);
-
-      margin-top: 10px;
-    }
-
-    .final-buttons {
-      display: flex;
-
-      flex-wrap: wrap;
-
-      justify-content: center;
-
-      gap: 4px;
-
-      margin-top: 10px;
-    }
-
-    .status {
-      min-height: 28px;
-
-      color: white;
-
-      font-weight: 800;
-
-      text-align: center;
-    }
-
-    /* =========================
-       MOBILE
-    ========================= */
-
-    @media (max-width: 500px) {
-      .frame-grid {
-        gap: 10px;
-      }
-
-      .frame-card {
-        padding: 5px;
-        border-width: 3px;
-        border-radius: 14px;
-      }
-
-      .frame-name {
-        font-size: 14px;
-      }
-
-      .photo-grid {
-        gap: 7px;
-      }
-
-      button {
-        font-size: 17px;
-        padding: 15px 20px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<title>J PHOTO BOOTH</title>
+
+<style>
+:root {
+  --bg: #101010;
+  --panel: #222;
+  --text: #fff;
+  --muted: #aaa;
+  --green: #00c853;
+  --blue: #2196f3;
+  --red: #ff5252;
+  --gold: #ffd54f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.screen {
+  min-height: 100svh;
+  padding: 25px 16px 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-size: clamp(30px, 7vw, 52px);
+  margin: 15px 0;
+  text-align: center;
+}
+
+h2 {
+  margin: 10px 0 18px;
+}
+
+p {
+  color: var(--muted);
+  font-size: 18px;
+  text-align: center;
+}
+
+button {
+  border: 0;
+  border-radius: 18px;
+  padding: 17px 28px;
+  margin: 8px;
+  min-height: 56px;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: var(--green);
+  color: white;
+}
+
+.blue {
+  background: var(--blue);
+  color: white;
+}
+
+.danger {
+  background: var(--red);
+  color: white;
+}
+
+.dark {
+  background: #333;
+  color: white;
+}
+
+.gold {
+  background: var(--gold);
+  color: #111;
+}
+
+.logo {
+  font-size: 72px;
+  margin-top: 8vh;
+}
+
+.home-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.info {
+  width: min(92vw, 800px);
+  margin-top: 25px;
+  padding: 15px 18px;
+  background: #191919;
+  border: 1px solid #333;
+  border-radius: 16px;
+  color: #999;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* CAMERA */
+
+.camera-wrap {
+  position: relative;
+  width: min(94vw, 850px);
+}
+
+#camera {
+  display: block;
+  width: 100%;
+  max-height: 70svh;
+  object-fit: cover;
+  border-radius: 24px;
+  background: #000;
+  transform: scaleX(-1);
+}
+
+#countdown {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(100px, 25vw, 190px);
+  font-weight: 900;
+  text-shadow: 0 4px 30px #000;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.counter {
+  font-size: 22px;
+  margin: 18px;
+  font-weight: 800;
+}
+
+/* REVIEW */
+
+.photo-grid {
+  width: min(94vw, 700px);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.photo-grid img {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  background: white;
+}
+
+/* FRAME SELECT */
+
+.frame-grid {
+  width: min(96vw, 1000px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 15px;
+}
+
+.frame-card {
+  background: #222;
+  border: 4px solid transparent;
+  border-radius: 20px;
+  padding: 10px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.frame-card:hover {
+  transform: translateY(-3px);
+}
+
+.frame-card.selected {
+  border-color: var(--green);
+  box-shadow:
+    0 0 0 3px rgba(0,200,83,.25),
+    0 8px 30px rgba(0,200,83,.15);
+}
+
+.frame-preview {
+  width: 100%;
+  aspect-ratio: 1 / 3;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  position: relative;
+}
+
+.frame-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.frame-name {
+  margin: 10px 4px 4px;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.frame-error {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--red);
+  font-weight: 800;
+  padding: 15px;
+}
+
+/* FINAL */
+
+#finalCanvas {
+  width: min(88vw, 420px);
+  height: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.5);
+}
+
+.status {
+  min-height: 30px;
+  margin-top: 15px;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+}
+
+.final-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.loading {
+  padding: 25px;
+  font-size: 20px;
+  color: #bbb;
+}
+
+@media (max-width: 700px) {
+
+  .frame-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 450px) {
+
+  .frame-grid {
+    grid-template-columns: 1fr;
+    width: min(90vw, 330px);
+  }
+
+  button {
+    width: min(90vw, 360px);
+  }
+
+}
+</style>
 </head>
 
 <body>
 
-  <!-- =====================================================
-       HOME
-  ====================================================== -->
+<!-- =========================
+     HOME
+========================= -->
 
-  <section id="home" class="screen">
+<section id="home" class="screen">
 
-    <div class="logo">📸</div>
+  <div class="logo">📸</div>
 
-    <h1>J PHOTO BOOTH</h1>
+  <h1>J PHOTO BOOTH</h1>
 
-    <p>
-      เลือกกรอบ → ถ่าย 3 รูป → ได้รูป Photo Booth
-    </p>
+  <p>
+    ถ่ายรูป • เลือกกรอบ • พิมพ์รูป
+  </p>
 
-    <div class="home-buttons">
+  <div class="home-buttons">
 
-      <button
-        class="primary"
-        onclick="openFrameSelector()"
-      >
-        🖼️ เลือกกรอบรูป
-      </button>
+    <button class="primary" onclick="startCamera()">
+      📸 เริ่มถ่ายรูป
+    </button>
 
-    </div>
+  </div>
 
-    <div class="info-box">
+  <div class="info">
+    ระบบ Photo Booth สำหรับ GitHub Pages<br>
+    กรอบรูปโหลดจากไฟล์ PNG ใน Repository โดยตรง
+  </div>
 
-      ระบบนี้ทำงานบน GitHub Pages โดยตรง<br>
-
-      ไม่ต้องใช้ Google Apps Script<br>
-
-      กรอบรูปอ่านจากโฟลเดอร์ <b>frames</b> ใน GitHub
-
-    </div>
-
-  </section>
+</section>
 
 
-  <!-- =====================================================
-       FRAME SELECTOR
-  ====================================================== -->
+<!-- =========================
+     CAMERA
+========================= -->
 
-  <section id="frameScreen" class="screen hidden">
+<section id="cameraScreen" class="screen hidden">
 
-    <h1>🖼️ เลือกกรอบรูป</h1>
+  <h1>📸 เตรียมตัว</h1>
 
-    <p id="frameStatus">
-      เลือกกรอบที่ต้องการ
-    </p>
+  <div class="camera-wrap">
 
-    <div
-      id="frameList"
-      class="frame-grid"
-    ></div>
+    <video
+      id="camera"
+      autoplay
+      playsinline
+      muted>
+    </video>
 
-    <div style="margin-top:20px;">
+  </div>
 
-      <button
-        class="dark"
-        onclick="showScreen('home')"
-      >
-        ← กลับ
-      </button>
+  <div id="countdown"></div>
 
-      <button
-        id="startCameraBtn"
-        class="primary"
-        onclick="startCamera()"
-        disabled
-      >
-        📸 เลือกกรอบแล้ว ถ่ายรูป
-      </button>
+  <div id="photoCounter" class="counter">
+    รูปที่ 1 / 4
+  </div>
 
-    </div>
-
-  </section>
+</section>
 
 
-  <!-- =====================================================
-       CAMERA
-  ====================================================== -->
+<!-- =========================
+     REVIEW
+========================= -->
 
-  <section id="cameraScreen" class="screen hidden">
+<section id="reviewScreen" class="screen hidden">
 
-    <h1>📸 เตรียมตัว</h1>
+  <h1>ตรวจสอบรูป</h1>
 
-    <div class="camera-wrap">
+  <div id="photoList" class="photo-grid"></div>
 
-      <video
-        id="camera"
-        autoplay
-        playsinline
-        muted
-      ></video>
+  <div class="home-buttons">
 
-    </div>
+    <button class="danger" onclick="restart()">
+      🔄 ถ่ายใหม่
+    </button>
 
-    <div id="countdown"></div>
+    <button class="primary" onclick="openFrameSelector()">
+      🖼️ เลือกกรอบ
+    </button>
 
-    <div
-      id="photoCounter"
-      class="counter"
-    >
-      รูปที่ 1 / 3
-    </div>
+  </div>
 
-    <p>
-      ระบบจะถ่ายอัตโนมัติ
-    </p>
-
-  </section>
+</section>
 
 
-  <!-- =====================================================
-       REVIEW
-  ====================================================== -->
+<!-- =========================
+     FRAME SELECTOR
+========================= -->
 
-  <section id="reviewScreen" class="screen hidden">
+<section id="frameScreen" class="screen hidden">
 
-    <h1>ตรวจสอบรูป</h1>
+  <h1>🖼️ เลือกกรอบรูป</h1>
 
-    <p>
-      รูปที่ถ่ายทั้งหมด 3 รูป
-    </p>
+  <p id="frameStatus">
+    กำลังโหลดกรอบ...
+  </p>
 
-    <div
-      id="photoList"
-      class="photo-grid"
-    ></div>
+  <div id="frameList" class="frame-grid"></div>
 
-    <div style="margin-top:20px;">
-
-      <button
-        class="danger"
-        onclick="restartCamera()"
-      >
-        🔄 ถ่ายใหม่
-      </button>
-
-      <button
-        class="primary"
-        onclick="createFinalPhoto()"
-      >
-        🎨 ใช้กรอบนี้
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       FINAL
-  ====================================================== -->
-
-  <section id="finalScreen" class="screen hidden">
-
-    <h1>🎉 รูปของคุณ</h1>
-
-    <canvas
-      id="finalCanvas"
-      width="600"
-      height="1800"
-    ></canvas>
-
-    <div class="final-buttons">
-
-      <button
-        class="blue"
-        onclick="downloadPhoto()"
-      >
-        ⬇️ ดาวน์โหลด
-      </button>
-
-      <button
-        class="primary"
-        onclick="printPhoto()"
-      >
-        🖨️ พิมพ์รูป
-      </button>
-
-    </div>
-
-    <p
-      id="status"
-      class="status"
-    ></p>
+  <div class="home-buttons">
 
     <button
       class="dark"
-      onclick="restartAll()"
-    >
-      🏠 เริ่มรายการใหม่
+      onclick="showScreen('reviewScreen')">
+      ← กลับ
     </button>
 
-  </section>
+    <button
+      id="useFrameBtn"
+      class="primary"
+      onclick="createFinalPhoto()"
+      disabled>
+      📸 ใช้กรอบนี้
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     FINAL
+========================= -->
+
+<section id="finalScreen" class="screen hidden">
+
+  <h1>🎉 รูปของคุณ</h1>
+
+  <canvas id="finalCanvas"></canvas>
+
+  <div class="final-buttons">
+
+    <button class="blue" onclick="printPhoto()">
+      🖨️ พิมพ์รูป
+    </button>
+
+    <button class="primary" onclick="downloadPhoto()">
+      ⬇️ ดาวน์โหลดรูป
+    </button>
+
+  </div>
+
+  <p id="status" class="status"></p>
+
+  <button class="dark" onclick="restart()">
+    🔄 เริ่มรายการใหม่
+  </button>
+
+</section>
 
 
 <script>
@@ -624,61 +464,36 @@
    SETTINGS
 ========================================================= */
 
+const PHOTO_COUNT = 4;
+
 /*
-  IMPORTANT
+  สำคัญมาก
 
-  ชื่อไฟล์ต้องตรงกับไฟล์ที่อยู่ใน GitHub
+  กรอบของคุณอยู่ที่ Root ของ GitHub Repository
 
-  โครงสร้าง:
+  photoone/
+  ├── index.html
+  ├── frame1.png
+  ├── frame2.png
+  └── frame3.png
 
-  frames/
-    frame1.png
-    frame2.png
-    frame3.png
+  ดังนั้นต้องใช้ ./frame1.png
 */
 
-const FRAMES = [
-
-  {
-    name: "กรอบที่ 1",
-    src: "frames/frame1.png"
-  },
-
-  {
-    name: "กรอบที่ 2",
-    src: "frames/frame2.png"
-  },
-
-  {
-    name: "กรอบที่ 3",
-    src: "frames/frame3.png"
-  }
-
+const FRAME_FILES = [
+  "frame1.png",
+  "frame2.png",
+  "frame3.png"
 ];
 
-
 /*
-  จำนวนรูปที่ต้องถ่าย
-*/
-
-const PHOTO_COUNT = 3;
-
-
-/*
-  ขนาดภาพสุดท้าย
-
-  600 x 1800 px
+  ขนาดรูปสุดท้าย
+  600 x 1800
+  = 2 x 6 นิ้ว ที่ 300 DPI
 */
 
 const OUTPUT_WIDTH = 600;
 const OUTPUT_HEIGHT = 1800;
-
-
-/*
-  เวลา Countdown
-*/
-
-const COUNTDOWN_SECONDS = 3;
 
 
 /* =========================================================
@@ -686,14 +501,13 @@ const COUNTDOWN_SECONDS = 3;
 ========================================================= */
 
 let video = null;
-
 let stream = null;
 
 let photos = [];
-
 let currentPhoto = 0;
 
-let selectedFrame = null;
+let frames = [];
+let selectedFrameIndex = -1;
 
 let finalImage = null;
 
@@ -706,196 +520,17 @@ function showScreen(id) {
 
   document
     .querySelectorAll(".screen")
-    .forEach(screen => {
-
-      screen.classList.add("hidden");
-
+    .forEach(function(el) {
+      el.classList.add("hidden");
     });
 
   const target = document.getElementById(id);
 
   if (target) {
-
     target.classList.remove("hidden");
-
   }
 
   window.scrollTo(0, 0);
-
-}
-
-
-/* =========================================================
-   LOAD FRAME SELECTOR
-========================================================= */
-
-function openFrameSelector() {
-
-  showScreen("frameScreen");
-
-  renderFrames();
-
-}
-
-
-/* =========================================================
-   SHOW FRAMES
-========================================================= */
-
-function renderFrames() {
-
-  const list =
-    document.getElementById("frameList");
-
-  const status =
-    document.getElementById("frameStatus");
-
-  const startButton =
-    document.getElementById("startCameraBtn");
-
-
-  list.innerHTML = "";
-
-  startButton.disabled = true;
-
-
-  if (!FRAMES.length) {
-
-    status.textContent =
-      "ไม่พบกรอบรูป";
-
-    return;
-
-  }
-
-
-  status.textContent =
-    "มีกรอบ " + FRAMES.length + " แบบ";
-
-
-  FRAMES.forEach((frame, index) => {
-
-    const card =
-      document.createElement("div");
-
-    card.className =
-      "frame-card";
-
-
-    const img =
-      document.createElement("img");
-
-    img.src = frame.src;
-
-    img.alt = frame.name;
-
-
-    /*
-      ถ้าไฟล์รูปโหลดไม่ได้
-    */
-
-    img.onerror = function() {
-
-      this.style.display = "none";
-
-      const error =
-        document.createElement("div");
-
-      error.style.padding = "40px 10px";
-
-      error.style.textAlign = "center";
-
-      error.style.color = "#ff7777";
-
-      error.innerHTML =
-        "โหลดกรอบไม่ได้<br>" +
-        "<small>" +
-        frame.src +
-        "</small>";
-
-      card.insertBefore(
-        error,
-        card.firstChild
-      );
-
-    };
-
-
-    const name =
-      document.createElement("div");
-
-    name.className =
-      "frame-name";
-
-    name.textContent =
-      frame.name;
-
-
-    card.appendChild(img);
-
-    card.appendChild(name);
-
-
-    card.onclick = function() {
-
-      selectedFrame = frame;
-
-
-      /*
-        ล้าง selection เดิม
-      */
-
-      document
-        .querySelectorAll(".frame-card")
-        .forEach(item => {
-
-          item.classList.remove("selected");
-
-          const badge =
-            item.querySelector(".selected-badge");
-
-          if (badge) {
-
-            badge.remove();
-
-          }
-
-        });
-
-
-      /*
-        เลือกอันนี้
-      */
-
-      card.classList.add("selected");
-
-
-      const badge =
-        document.createElement("div");
-
-      badge.className =
-        "selected-badge";
-
-      badge.textContent =
-        "✓ เลือกแล้ว";
-
-
-      card.appendChild(badge);
-
-
-      startButton.disabled = false;
-
-
-      status.textContent =
-        "เลือก " + frame.name + " แล้ว";
-
-    };
-
-
-    list.appendChild(card);
-
-  });
-
 }
 
 
@@ -905,88 +540,62 @@ function renderFrames() {
 
 async function startCamera() {
 
-  if (!selectedFrame) {
-
-    alert("กรุณาเลือกกรอบรูปก่อน");
-
-    return;
-
-  }
-
-
   showScreen("cameraScreen");
-
 
   try {
 
-    /*
-      ขอสิทธิ์กล้อง
-    */
+    if (!navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia) {
+
+      throw new Error(
+        "เบราว์เซอร์นี้ไม่รองรับการเปิดกล้อง"
+      );
+    }
 
     stream =
       await navigator.mediaDevices.getUserMedia({
 
         video: {
-
           facingMode: "user",
-
           width: {
             ideal: 1280
           },
-
           height: {
             ideal: 1920
           }
-
         },
 
         audio: false
 
       });
 
-
     video =
       document.getElementById("camera");
 
-
-    video.srcObject =
-      stream;
-
+    video.srcObject = stream;
 
     await video.play();
 
-
     photos = [];
-
     currentPhoto = 0;
 
-
-    /*
-      รอกล้องประมาณ 1 วินาที
-    */
-
-    setTimeout(
-      takePhoto,
-      1000
-    );
-
-
-  } catch (error) {
-
-    console.error(error);
-
-
-    alert(
-      "เปิดกล้องไม่ได้\n\n" +
-      "กรุณาอนุญาตให้ Safari ใช้งานกล้อง\n\n" +
-      error.message
-    );
-
-
-    showScreen("frameScreen");
+    setTimeout(function() {
+      takePhoto();
+    }, 1000);
 
   }
 
+  catch (error) {
+
+    console.error(error);
+
+    alert(
+      "เปิดกล้องไม่ได้\n\n" +
+      error.message
+    );
+
+    showScreen("home");
+  }
 }
 
 
@@ -996,43 +605,37 @@ async function startCamera() {
 
 function countdown(seconds) {
 
-  return new Promise(resolve => {
+  return new Promise(function(resolve) {
 
-    let number = seconds;
+    let n = seconds;
 
-    const element =
+    const el =
       document.getElementById("countdown");
 
-
-    element.textContent =
-      number;
-
+    el.textContent = n;
 
     const timer =
-      setInterval(() => {
+      setInterval(function() {
 
-        number--;
+        n--;
 
-
-        if (number <= 0) {
+        if (n <= 0) {
 
           clearInterval(timer);
 
-          element.textContent = "";
+          el.textContent = "";
 
           resolve();
 
         } else {
 
-          element.textContent =
-            number;
+          el.textContent = n;
 
         }
 
       }, 1000);
 
   });
-
 }
 
 
@@ -1044,32 +647,23 @@ async function takePhoto() {
 
   currentPhoto++;
 
+  document
+    .getElementById("photoCounter")
+    .textContent =
+      `รูปที่ ${currentPhoto} / ${PHOTO_COUNT}`;
 
-  document.getElementById(
-    "photoCounter"
-  ).textContent =
-    "รูปที่ " +
-    currentPhoto +
-    " / " +
-    PHOTO_COUNT;
+  await countdown(3);
 
+  if (!video ||
+      video.readyState < 2) {
 
-  /*
-    Countdown
-  */
+    alert("กล้องยังไม่พร้อม");
 
-  await countdown(
-    COUNTDOWN_SECONDS
-  );
-
-
-  /*
-    สร้าง Canvas
-  */
+    return;
+  }
 
   const canvas =
     document.createElement("canvas");
-
 
   canvas.width =
     video.videoWidth || 1280;
@@ -1077,24 +671,15 @@ async function takePhoto() {
   canvas.height =
     video.videoHeight || 1920;
 
-
   const ctx =
     canvas.getContext("2d");
 
-
   /*
-    Mirror ภาพให้เหมือนกล้องหน้า
+    กลับด้านรูปให้เหมือน Preview
   */
 
-  ctx.save();
-
-  ctx.translate(
-    canvas.width,
-    0
-  );
-
+  ctx.translate(canvas.width, 0);
   ctx.scale(-1, 1);
-
 
   ctx.drawImage(
     video,
@@ -1104,14 +689,6 @@ async function takePhoto() {
     canvas.height
   );
 
-
-  ctx.restore();
-
-
-  /*
-    เก็บรูป
-  */
-
   photos.push(
     canvas.toDataURL(
       "image/jpeg",
@@ -1119,33 +696,20 @@ async function takePhoto() {
     )
   );
 
-
-  /*
-    ถ้ายังไม่ครบ 3 รูป
-  */
-
-  if (
-    currentPhoto <
-    PHOTO_COUNT
-  ) {
+  if (currentPhoto < PHOTO_COUNT) {
 
     setTimeout(
       takePhoto,
-      900
+      700
     );
 
   } else {
-
-    /*
-      ครบ 3 รูป
-    */
 
     stopCamera();
 
     showReview();
 
   }
-
 }
 
 
@@ -1159,16 +723,14 @@ function stopCamera() {
 
     stream
       .getTracks()
-      .forEach(track => {
+      .forEach(function(track) {
 
         track.stop();
 
       });
 
     stream = null;
-
   }
-
 }
 
 
@@ -1178,56 +740,213 @@ function stopCamera() {
 
 function showReview() {
 
-  showScreen(
-    "reviewScreen"
-  );
-
+  showScreen("reviewScreen");
 
   const list =
-    document.getElementById(
-      "photoList"
-    );
-
+    document.getElementById("photoList");
 
   list.innerHTML = "";
 
-
   photos.forEach(
-    (photo, index) => {
+    function(photo, index) {
 
       const img =
         document.createElement("img");
 
-
       img.src = photo;
 
-
       img.alt =
-        "รูปที่ " +
-        (index + 1);
-
+        "รูป " + (index + 1);
 
       list.appendChild(img);
 
     }
   );
-
 }
 
 
 /* =========================================================
-   RESTART CAMERA
+   FRAME SELECTOR
 ========================================================= */
 
-function restartCamera() {
+function openFrameSelector() {
 
-  stopCamera();
+  showScreen("frameScreen");
 
-  photos = [];
+  loadFrames();
+}
 
-  currentPhoto = 0;
 
-  startCamera();
+/* =========================================================
+   LOAD FRAMES FROM GITHUB
+========================================================= */
+
+function loadFrames() {
+
+  const list =
+    document.getElementById("frameList");
+
+  const status =
+    document.getElementById("frameStatus");
+
+  const btn =
+    document.getElementById("useFrameBtn");
+
+  list.innerHTML = "";
+
+  btn.disabled = true;
+
+  selectedFrameIndex = -1;
+
+  status.textContent =
+    "กำลังโหลดกรอบ...";
+
+  frames = [];
+
+  /*
+    สร้างรายการกรอบจาก GitHub
+  */
+
+  FRAME_FILES.forEach(
+    function(fileName, index) {
+
+      const card =
+        document.createElement("div");
+
+      card.className =
+        "frame-card";
+
+      const preview =
+        document.createElement("div");
+
+      preview.className =
+        "frame-preview";
+
+      const img =
+        document.createElement("img");
+
+      /*
+        จุดสำคัญที่สุดของการแก้ครั้งนี้
+
+        ใช้ ./frame1.png
+        ไม่ใช่ frames/frame1.png
+      */
+
+      const imageUrl =
+        "./" +
+        fileName +
+        "?v=" +
+        Date.now();
+
+      img.src = imageUrl;
+
+      img.alt =
+        "กรอบที่ " + (index + 1);
+
+      img.onload =
+        function() {
+
+          console.log(
+            "โหลดกรอบสำเร็จ:",
+            imageUrl
+          );
+
+        };
+
+      img.onerror =
+        function() {
+
+          console.error(
+            "โหลดกรอบไม่ได้:",
+            imageUrl
+          );
+
+          preview.innerHTML = "";
+
+          const error =
+            document.createElement("div");
+
+          error.className =
+            "frame-error";
+
+          error.innerHTML =
+            "❌ โหลดกรอบไม่ได้<br>" +
+            fileName;
+
+          preview.appendChild(error);
+
+        };
+
+      preview.appendChild(img);
+
+      const name =
+        document.createElement("div");
+
+      name.className =
+        "frame-name";
+
+      name.textContent =
+        "กรอบที่ " + (index + 1);
+
+      card.appendChild(preview);
+      card.appendChild(name);
+
+      card.onclick =
+        function() {
+
+          /*
+            เลือกกรอบ
+          */
+
+          selectedFrameIndex =
+            index;
+
+          document
+            .querySelectorAll(".frame-card")
+            .forEach(
+              function(item) {
+
+                item.classList.remove(
+                  "selected"
+                );
+
+              }
+            );
+
+          card.classList.add(
+            "selected"
+          );
+
+          btn.disabled = false;
+
+          status.textContent =
+            "เลือกกรอบที่ " +
+            (index + 1) +
+            " แล้ว";
+
+        };
+
+      list.appendChild(card);
+
+      /*
+        เก็บข้อมูลกรอบ
+      */
+
+      frames.push({
+
+        name: fileName,
+
+        url: imageUrl
+
+      });
+
+    }
+  );
+
+  status.textContent =
+    "มีกระอบ " +
+    FRAME_FILES.length +
+    " แบบ";
 
 }
 
@@ -1238,41 +957,28 @@ function restartCamera() {
 
 async function createFinalPhoto() {
 
-  if (!selectedFrame) {
+  if (selectedFrameIndex < 0) {
 
     alert(
-      "ยังไม่ได้เลือกกรอบ"
+      "กรุณาเลือกกรอบก่อน"
     );
 
     return;
-
   }
 
-
-  if (
-    photos.length !==
-    PHOTO_COUNT
-  ) {
+  if (!photos.length) {
 
     alert(
-      "รูปยังไม่ครบ 3 รูป"
+      "ไม่พบรูปที่ถ่าย"
     );
 
     return;
-
   }
-
-
-  showScreen(
-    "finalScreen"
-  );
-
 
   const canvas =
     document.getElementById(
       "finalCanvas"
     );
-
 
   canvas.width =
     OUTPUT_WIDTH;
@@ -1280,17 +986,14 @@ async function createFinalPhoto() {
   canvas.height =
     OUTPUT_HEIGHT;
 
-
   const ctx =
     canvas.getContext("2d");
 
-
   /*
-    พื้นหลังสีขาว
+    พื้นหลัง
   */
 
-  ctx.fillStyle =
-    "#ffffff";
+  ctx.fillStyle = "#ffffff";
 
   ctx.fillRect(
     0,
@@ -1299,110 +1002,93 @@ async function createFinalPhoto() {
     OUTPUT_HEIGHT
   );
 
-
   /*
-    --------------------------------
-    พื้นที่สำหรับรูป 3 รูป
-    --------------------------------
-
-    รูปที่ 1
-    รูปที่ 2
-    รูปที่ 3
+    ตำแหน่งรูป 4 รูป
   */
-
 
   const marginX = 42;
 
   const top = 45;
 
-  const bottom = 45;
-
   const gap = 18;
 
+  const bottomArea = 150;
 
-  const photoWidth =
+  const photoW =
     OUTPUT_WIDTH -
-    (marginX * 2);
+    marginX * 2;
 
+  const availableH =
+    OUTPUT_HEIGHT -
+    top -
+    bottomArea -
+    gap * (PHOTO_COUNT - 1);
 
-  const photoHeight =
-    (
-      OUTPUT_HEIGHT -
-      top -
-      bottom -
-      (gap * 2)
-    ) / 3;
-
-
-  /*
-    โหลดรูปทั้ง 3
-  */
+  const photoH =
+    Math.floor(
+      availableH / PHOTO_COUNT
+    );
 
   try {
+
+    /*
+      โหลดรูปทั้งหมด
+    */
 
     const images =
       await Promise.all(
         photos.map(
-          src => loadImage(src)
+          loadImage
         )
       );
 
-
     /*
-      วางรูป 3 รูป
+      วาดรูป
     */
 
     images.forEach(
-      (image, index) => {
+      function(img, index) {
 
         const y =
           top +
           index *
-          (photoHeight + gap);
-
+          (photoH + gap);
 
         drawCover(
           ctx,
-          image,
+          img,
           marginX,
           y,
-          photoWidth,
-          photoHeight
+          photoW,
+          photoH
         );
 
       }
     );
 
-
     /*
       โหลดกรอบ
     */
 
-    const frameImage =
+    const frame =
       await loadImage(
-        selectedFrame.src
+        frames[selectedFrameIndex].url
       );
 
-
     /*
-      วางกรอบด้านบนสุด
-
-      สำคัญ:
-      PNG กรอบควรมีพื้นที่โปร่งใส
-      ตรงตำแหน่งรูป
+      วางกรอบทับด้านบน
     */
 
     ctx.drawImage(
-      frameImage,
+      frame,
       0,
       0,
       OUTPUT_WIDTH,
       OUTPUT_HEIGHT
     );
 
-
     /*
-      แปลงเป็น JPG
+      สร้าง JPEG
     */
 
     finalImage =
@@ -1411,14 +1097,18 @@ async function createFinalPhoto() {
         0.95
       );
 
+    showScreen(
+      "finalScreen"
+    );
 
-    document.getElementById(
-      "status"
-    ).textContent =
-      "✅ สร้างรูปเรียบร้อยแล้ว";
+    document
+      .getElementById("status")
+      .textContent =
+        "สร้างรูปเรียบร้อยแล้ว";
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(error);
 
@@ -1439,16 +1129,10 @@ async function createFinalPhoto() {
 function loadImage(src) {
 
   return new Promise(
-    (resolve, reject) => {
+    function(resolve, reject) {
 
       const img =
         new Image();
-
-
-      /*
-        สำหรับไฟล์ใน GitHub
-        ไม่ต้องใช้ CORS
-      */
 
       img.onload =
         function() {
@@ -1456,7 +1140,6 @@ function loadImage(src) {
           resolve(img);
 
         };
-
 
       img.onerror =
         function() {
@@ -1470,12 +1153,10 @@ function loadImage(src) {
 
         };
 
-
       img.src = src;
 
     }
   );
-
 }
 
 
@@ -1488,67 +1169,48 @@ function drawCover(
   img,
   x,
   y,
-  width,
-  height
+  w,
+  h
 ) {
-
-  /*
-    คำนวณ scale
-    ให้รูปเต็มพื้นที่
-  */
 
   const scale =
     Math.max(
-      width / img.width,
-      height / img.height
+      w / img.width,
+      h / img.height
     );
 
-
-  const drawWidth =
+  const dw =
     img.width * scale;
 
-
-  const drawHeight =
+  const dh =
     img.height * scale;
 
+  const dx =
+    x + (w - dw) / 2;
 
-  const drawX =
-    x +
-    (width - drawWidth) / 2;
-
-
-  const drawY =
-    y +
-    (height - drawHeight) / 2;
-
-
-  /*
-    ตัดไม่ให้รูปออกนอกช่อง
-  */
+  const dy =
+    y + (h - dh) / 2;
 
   ctx.save();
-
 
   ctx.beginPath();
 
   ctx.rect(
     x,
     y,
-    width,
-    height
+    w,
+    h
   );
 
   ctx.clip();
 
-
   ctx.drawImage(
     img,
-    drawX,
-    drawY,
-    drawWidth,
-    drawHeight
+    dx,
+    dy,
+    dw,
+    dh
   );
-
 
   ctx.restore();
 
@@ -1568,33 +1230,24 @@ function downloadPhoto() {
     );
 
     return;
-
   }
-
 
   const link =
     document.createElement("a");
 
-
   link.href =
     finalImage;
-
 
   link.download =
     "J-PHOTO-" +
     Date.now() +
     ".jpg";
 
-
-  document.body.appendChild(
-    link
-  );
-
+  document.body.appendChild(link);
 
   link.click();
 
-
-  link.remove();
+  document.body.removeChild(link);
 
 }
 
@@ -1612,72 +1265,53 @@ function printPhoto() {
     );
 
     return;
-
   }
 
-
-  /*
-    เปิดหน้าพิมพ์
-  */
-
-  const printWindow =
+  const win =
     window.open(
       "",
       "_blank"
     );
 
-
-  if (!printWindow) {
+  if (!win) {
 
     alert(
-      "Safari บล็อกหน้าต่างใหม่\n" +
-      "กรุณาอนุญาต Pop-up สำหรับเว็บไซต์นี้"
+      "เบราว์เซอร์บล็อก Pop-up\n" +
+      "กรุณาอนุญาต Pop-up"
     );
 
     return;
-
   }
 
+  win.document.open();
 
-  printWindow.document.open();
+  win.document.write(`
 
-
-  printWindow.document.write(`
-
-<!DOCTYPE html>
+<!doctype html>
 
 <html>
 
 <head>
 
-<meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width,initial-scale=1"
->
+<meta name="viewport"
+      content="width=device-width,initial-scale=1">
 
 <title>J PHOTO BOOTH</title>
 
 <style>
 
 @page {
-
   size: 2in 6in;
-
   margin: 0;
-
 }
 
 html,
 body {
 
   margin: 0;
-
   padding: 0;
 
   width: 2in;
-
   height: 6in;
 
   background: white;
@@ -1689,7 +1323,6 @@ img {
   display: block;
 
   width: 2in;
-
   height: 6in;
 
 }
@@ -1700,9 +1333,7 @@ img {
 
 <body>
 
-<img
-  src="${finalImage}"
->
+<img src="${finalImage}">
 
 <script>
 
@@ -1710,9 +1341,7 @@ window.onload = function() {
 
   setTimeout(
     function() {
-
       window.print();
-
     },
     500
   );
@@ -1727,42 +1356,40 @@ window.onload = function() {
 
 `);
 
-
-  printWindow.document.close();
+  win.document.close();
 
 }
 
 
 /* =========================================================
-   RESTART EVERYTHING
+   RESTART
 ========================================================= */
 
-function restartAll() {
+function restart() {
 
   stopCamera();
-
 
   photos = [];
 
   currentPhoto = 0;
 
-  selectedFrame = null;
+  frames = [];
+
+  selectedFrameIndex = -1;
 
   finalImage = null;
 
+  document
+    .getElementById("photoList")
+    .innerHTML = "";
 
-  /*
-    ล้างรูปเก่า
-  */
+  document
+    .getElementById("frameList")
+    .innerHTML = "";
 
-  document.getElementById(
-    "photoList"
-  ).innerHTML = "";
-
-
-  /*
-    กลับหน้าแรก
-  */
+  document
+    .getElementById("status")
+    .textContent = "";
 
   showScreen(
     "home"
@@ -1777,9 +1404,9 @@ function restartAll() {
 
 document.addEventListener(
   "gesturestart",
-  function(event) {
+  function(e) {
 
-    event.preventDefault();
+    e.preventDefault();
 
   }
 );
